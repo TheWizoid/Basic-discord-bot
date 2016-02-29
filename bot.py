@@ -1,6 +1,7 @@
 #It works! 
 import discord
 import asyncio
+import os
 from random import randint
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
@@ -10,6 +11,7 @@ accinfo.close()
 
 client = discord.Client()
 client.login("username","password")
+
 
 @client.async_event
 def on_message(message):
@@ -62,7 +64,14 @@ def on_message(message):
     
     
     #ad infinitum
-        
+    #kill (only available to the person running the bot)
+    if message.content.startswith("!kill".casefold()):
+        if message.author.name == "TheWizoid" and message.author.id == "99916696600461312":
+            yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
+            yield from asyncio.sleep(5)
+            
+            os._exit(0)
+            
 @client.async_event
 #Displays login name/id
 def on_ready():
