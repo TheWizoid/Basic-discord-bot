@@ -68,9 +68,7 @@ def on_message(message):
     if message.content.startswith("!kill".casefold()):
         if message.author.name == "TheWizoid" and message.author.id == "99916696600461312":
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
-            yield from asyncio.sleep(5)
-            
-            os._exit(0)
+            os._exit(5)
             
 @client.async_event
 #Displays login name/id
