@@ -1,10 +1,12 @@
-#Runs perfectly fine MingLee
+#It works! 
 import discord
 import asyncio
-
+from random import randint
+#this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
-info = accinfo.read().split(";")
+info = accinfo.read().split(";") #splits up username and password
 accinfo.close()
+#this block is for privacy :>
 
 client = discord.Client()
 client.login("username","password")
@@ -23,10 +25,11 @@ def on_message(message):
     if message.content.startswith("!kek".casefold()) or message.content.startswith("!topkek".casefold()):
         yield from client.send_message(message.channel, "top kek xD")
     if message.content.startswith("!itis".casefold()):
-        if counter % 3 == 0 and counter != 0:
+        number = randint(1,10)
+        if number % 3 == 0:
             yield from client.send_message(message.channel, "Is it?")
-        yield from client.send_message(message.channel, "It isn't")
-        counter += 1
+        else:
+            yield from client.send_message(message.channel, "It isn't")
     
     if message.content.startswith("!age".casefold()):
         yield from client.send_message(message.channel, "PedoBear")
@@ -55,16 +58,17 @@ def on_message(message):
     if message.content.startswith("!rarelola".casefold()):
         yield from client.send_message(message.channel, "http://i.imgur.com/yz6c2RE.gif")
     if message.content.startswith("!fuckingmetal".casefold()):
-        yield from client.send_message(message.channel, "http://i.imgur.com/GiG4nPn.gif)
+        yield from client.send_message(message.channel, "http://i.imgur.com/GiG4nPn.gif")
     
     
     #ad infinitum
         
 @client.async_event
+#Displays login name/id
 def on_ready():
-    print("logged in as")
+    print("Logged in as")
     print(client.user.name)
     print(client.user.id)
-    client.accept_invite("https://discord.gg/0qRxlLO5ywXH4ejB")
     
-client.run(info[0], info[1])
+    
+client.run(info[0], info[1]) #0 is username, 1 is password.
