@@ -1,11 +1,10 @@
 #It works!
-#REMEMBER TO ADD THESE GIFS http://pastebin.com/mM6x75TE
-#http://pastebin.com/mM6x75TE
-#http://pastebin.com/mM6x75TE
+
 import discord
 import asyncio
 import os
 from random import randint
+
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
 info = accinfo.read().split(";") #splits up username and password
@@ -19,6 +18,12 @@ client.login("username","password")
 @client.async_event
 def on_message(message):
     #General stuff
+    if message.content.startswith("!online".casefold()):
+        yield from client.send_message(message.channel, "Barry Bot is online")
+
+    if message.content.startswith("!memeschool".casefold()):
+        yield from client.send_message(message.channel, "https://www.youtube.com/watch?v=fJdA7dwx6-4")
+        
     if message.content.startswith("!commands") or message.content.startswith("!command".casefold()):
         yield from client.send_message(message.channel, "A list of current commands: you really expect to list all these? Bloody hell.")
 
@@ -41,9 +46,6 @@ def on_message(message):
     if message.content.startswith("!kek".casefold()) or message.content.startswith("!topkek".casefold()):
         yield from client.send_message(message.channel, "top kek xD")
         
-    if message.content.startswith("!meme".casefold()):
-        yield from client.send_message(message.channel, "Dank memes")
-    
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:
@@ -83,9 +85,11 @@ def on_message(message):
     if message.content.startswith("!rarelola".casefold()):
         yield from client.send_message(message.channel, "http://i.imgur.com/yz6c2RE.gif")
         
+    if message.content.startswith("!sigma".casefold()):
+        yield from client.send_message(message.channel, "http://pastebin.com/mM6x75TE")
+
     if message.content.startswith("!shoe".casefold()):
         yield from client.send_message(message.channel, "http://i.imgur.com/qEMJJTP.gif")
-    
     
     #kill (only available to bot operators)
     if message.content.startswith("!kill".casefold()):
