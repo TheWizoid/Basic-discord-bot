@@ -1,4 +1,7 @@
-#It works! 
+#It works!
+#REMEMBER TO ADD THESE GIFS http://pastebin.com/mM6x75TE
+#http://pastebin.com/mM6x75TE
+#http://pastebin.com/mM6x75TE
 import discord
 import asyncio
 import os
@@ -63,7 +66,7 @@ def on_message(message):
     if message.content.startswith("!kieran".casefold()):
         yield from client.send_message(message.channel, "http://i.imgur.com/37274Z1.jpg oi oi kieran")
         
-     if message.content.startswith("!nick".casefold()):
+    if message.content.startswith("!nick".casefold()):
         yield from client.send_message(message.channel, "NIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIICK! Kreygasm")
         
     if message.content.startswith("!sogyoh".casefold()):
