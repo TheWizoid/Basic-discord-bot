@@ -60,6 +60,9 @@ class special_commands:
     
         if message.content.startswith("!age".casefold()):
             yield from client.send_message(message.channel, "PedoBear")
+            
+        if message.content.startswith("xD".casefold()) or message.content.startswith("!xD".casefold()):
+            yield from client.send_message(message.channel, "xD")
         
     #People
         
