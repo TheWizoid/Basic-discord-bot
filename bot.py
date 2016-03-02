@@ -129,7 +129,6 @@ def on_message(message):
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
         
         temp_message = message.content.split()
-        print(temp_message)
         choice = temp_message[1].lower()
         
         if choice == "stone":
