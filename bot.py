@@ -1,11 +1,12 @@
 #It works!
 
+import logging
 import datetime
 import discord
 import asyncio
 import os
 from random import randint
-import logging
+
 
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
@@ -22,7 +23,7 @@ modlist.close()
 
 @client.async_event
 def on_message(message):
-    #Chat logger
+    #Chat logger Doesn't work with uploads (displays as a space after the name)
     logging_consent = open("logging_chat.txt","r")
     logging_chat = logging_consent.read()
     logging_consent.close()
