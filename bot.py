@@ -1,9 +1,11 @@
 #It works!
 
+import datetime
 import discord
 import asyncio
 import os
 from random import randint
+import logging
 
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
@@ -13,15 +15,49 @@ accinfo.close()
 
 client = discord.Client()
 client.login("username","password")
-
-
+modlist = open("modlist.txt","r")
+mod = modlist.read()#List of mods on 1 line, edit at your pleasure
+mod = mod.split(";")
+modlist.close()
 
 @client.async_event
 def on_message(message):
-#General stuff
+    #Chat logger
+    logging_consent = open("logging_chat.txt","r")
+    logging_chat = logging_consent.read()
+    logging_consent.close()
+    #print(message.server) #prints the server name, for adding servers and their logfiles
+    if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod: 
+        yield from client.send_message(message.channel, "Chatlogging off" )
+        logging_consent = open("logging_chat.txt","w")
+        logging_consent.write("False")
+        logging_consent.close()
+        
+    if message.content.startswith("!chatlogon".casefold()) and message.author.name in mod:
+        yield from client.send_message(message.channel, "Chatlogging on")
+        logging_consent = open("logging_chat.txt","w")
+        logging_consent.write("True")
+        logging_consent.close()
+        
+    if logging_chat == "True":
+        message.server = str(message.server)
+        
+        if message.server == "r00kieboys":
+            chatlog = open("r00kie_chatlog.txt","a")
+        elif message.server == "need for pleb":
+            chatlog = open("lads_chatlog.txt","a")
+        elif message.server == "Bot test":
+            chatlog = open("test_chatlog.txt","a")
+            
+        time = str(datetime.datetime.now())
+        
+        chatlog.write("["+time[0:19]+"]"+message.author.name+":"+message.content+"\n")#slicing the string is easier than importing gmtime and specifying hh:mm:ss lol
+        chatlog.close()
+        
+    #General stuff
     if message.content.startswith("!online".casefold()):
         yield from client.send_message(message.channel, "Barry Bot is online")
-    
+        
     if message.content.startswith("!memeschool".casefold()):
         yield from client.send_message(message.channel, "https://www.youtube.com/watch?v=fJdA7dwx6-4")
         
@@ -30,6 +66,9 @@ def on_message(message):
 
     if message.content.startswith("!hello".casefold()):
         yield from client.send_message(message.channel, "Hello " + message.author.name)
+        
+    if message.content.startswith("!mod".casefold()):
+        yield from client.send_message(message.channel, "Never mod FeelsBadMan")
         
     if message.content.startswith("!bye".casefold()):
         yield from client.send_message(message.channel, "Bye " + message.author.name)
