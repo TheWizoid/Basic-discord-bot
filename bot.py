@@ -24,10 +24,11 @@ modlist.close()
 @client.async_event
 def on_message(message):
     #Chat logger Doesn't work with uploads (displays as a space after the name)
+    
     logging_consent = open("logging_chat.txt","r")
     logging_chat = logging_consent.read()
     logging_consent.close()
-    #print(message.server) #prints the server name, for adding servers and their logfiles
+    #print(message.server) #prints the server name, for adding servers and their logfiles/debugging
     if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod: 
         yield from client.send_message(message.channel, "Chatlogging off" )
         logging_consent = open("logging_chat.txt","w")
@@ -56,26 +57,47 @@ def on_message(message):
         chatlog.close()
         
     #General stuff
-    if message.content.startswith("!online".casefold()):
-        yield from client.send_message(message.channel, "Barry Bot is online")
-        
-    if message.content.startswith("!memeschool".casefold()):
-        yield from client.send_message(message.channel, "https://www.youtube.com/watch?v=fJdA7dwx6-4")
-        
-    if message.content.startswith("!commands") or message.content.startswith("!command".casefold()):
-        yield from client.send_message(message.channel, "A list of current commands: you really expect me to list all these? Bloody hell.")
 
+    commands = {
+        #General
+        "!online": "Barry bot is online",
+        "!memeschool": "https://www.youtube.com/watch?v=fJdA7dwx6-4",
+        "!commands": "You really expect me to list all these? Bloody hell",
+        "!command": "you really expect me to list all these? Bloody hell",
+        "!mod": "Never mod FeelsBadman",
+        "!g4g": "http://www.gamingforgood.net/s/r00kieoftheyear#donate MingLee",
+        "!kek": "top kek xD",
+        "!topkek": "top kek xD",
+        "!age": "PedoBear",
+        #People
+        "!chris": "Abusive uncle Chris DansGame",
+        "!eladia": "We miss you BibleThump",
+        "!kieran": "http://i.imgur.com/37274Z1.jpg oi oi kieran",
+        "!nick": "NIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIICK! Kreygasm",
+        "!sogyoh": "TriHard I am so fucking zooted right now CiGrip",
+        #GIFS
+        "!flex": "http://i.imgur.com/YdCl7E8.gif",
+        "!fuckingmental": "http://i.imgur.com/GiG4nPn.gif",
+        "!rarelola": "http://i.imgur.com/yz6c2RE.gif",
+        "!sigma": "http://pastebin.com/mM6x75TE",
+        "!shoe": "http://i.imgur.com/qEMJJTP.gif",
+        }
+    
+    commands_array = ["!online","!memeschool","!commands","!command","!mod","!g4g","!kek","!topkek",\
+                      "!age","!chris","!eladia","!kieran","!nick","!sogyoh","!flex", "!fuckingmental",\
+                      "!rarelola","!sigma","!shoe"]
+    
+    for i in commands_array:
+        if str(message.content[0:12]) == i.casefold():
+            yield from client.send_message(message.channel, commands[i])
+            break
+        
+    #Slightly more complex commands than printing in chat        
     if message.content.startswith("!hello".casefold()):
         yield from client.send_message(message.channel, "Hello " + message.author.name)
         
-    if message.content.startswith("!mod".casefold()):
-        yield from client.send_message(message.channel, "Never mod FeelsBadMan")
-        
     if message.content.startswith("!bye".casefold()):
         yield from client.send_message(message.channel, "Bye " + message.author.name)
-        
-    if message.content.startswith("!g4g".casefold()):
-        yield from client.send_message(message.channel, "http://www.gamingforgood.net/s/r00kieoftheyear#donate MingLee")
             
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
@@ -83,9 +105,6 @@ def on_message(message):
             yield from client.send_message(message.channel, "Is it?")
         else:
             yield from client.send_message(message.channel, "It isn't")
-            
-    if message.content.startswith("!kek".casefold()) or message.content.startswith("!topkek".casefold()):
-        yield from client.send_message(message.channel, "top kek xD")
         
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
@@ -94,43 +113,6 @@ def on_message(message):
                 break
             yield from asyncio.sleep(1)
             yield from client.send_message(message.channel, "{}".format(i))
-    
-    if message.content.startswith("!age".casefold()):
-        yield from client.send_message(message.channel, "PedoBear")
-        
-    #People
-        
-    if message.content.startswith("!chris".casefold()):
-        yield from client.send_message(message.channel, "Abusive uncle chris DansGame")
-        
-    if message.content.startswith("!eladia".casefold()):
-        yield from client.send_message(message.channel, "We miss you BibleThump")
-        
-    if message.content.startswith("!kieran".casefold()):
-        yield from client.send_message(message.channel, "http://i.imgur.com/37274Z1.jpg oi oi kieran")
-        
-    if message.content.startswith("!nick".casefold()):
-        yield from client.send_message(message.channel, "NIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIICK! Kreygasm")
-        
-    if message.content.startswith("!sogyoh".casefold()):
-        yield from client.send_message(message.channel, "TriHard I am so fucking zooted right now CiGrip")
-            
-    #GIFs
-            
-    if message.content.startswith("!flex".casefold()):
-        yield from client.send_message(message.channel, "http://i.imgur.com/YdCl7E8.gif")
-            
-    if message.content.startswith("!fuckingmental".casefold()):
-        yield from client.send_message(message.channel, "http://i.imgur.com/GiG4nPn.gif")
-        
-    if message.content.startswith("!rarelola".casefold()):
-        yield from client.send_message(message.channel, "http://i.imgur.com/yz6c2RE.gif")
-        
-    if message.content.startswith("!sigma".casefold()):
-        yield from client.send_message(message.channel, "http://pastebin.com/mM6x75TE")
-
-    if message.content.startswith("!shoe".casefold()):
-        yield from client.send_message(message.channel, "http://i.imgur.com/qEMJJTP.gif")
 
     
     #kill (only available to bot operator)
