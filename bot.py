@@ -78,14 +78,16 @@ def on_message(message):
         #GIFS
         "!flex": "http://i.imgur.com/YdCl7E8.gif",
         "!fuckingmental": "http://i.imgur.com/GiG4nPn.gif",
+        "!lolachamp": "http://i.imgur.com/hsBcxLo.gif",
         "!rarelola": "http://i.imgur.com/yz6c2RE.gif",
         "!sigma": "http://pastebin.com/mM6x75TE",
         "!shoe": "http://i.imgur.com/qEMJJTP.gif",
+        "!wutface": "http://i.imgur.com/MH60h6v.gif"
         }
     
     commands_array = ["!online","!memeschool","!commands","!command","!mod","!g4g","!kek","!topkek",\
                       "!age","!chris","!eladia","!kieran","!nick","!sogyoh","!flex", "!fuckingmental",\
-                      "!rarelola","!sigma","!shoe"]
+                      "!lolachamp","!rarelola","!sigma","!shoe","!wutface"]
     
     for i in commands_array:
         if str(message.content[0:12]) == i.casefold():
@@ -125,41 +127,22 @@ def on_message(message):
 
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
-        temp = open("temp.txt", "w")
-        temp.write(message.content)
-        temp.close()
+        
+        temp_message = message.content.split()
+        print(temp_message)
+        choice = temp_message[1].lower()
+        
+        if choice == "stone":
+            choice = "rock"
+        elif choice == "scissor":
+            choice = "scissors"
             
-        temp = open("temp.txt", "r")
-        new_message = temp.read().lower()
-        temp.close()
-
-            #Tries to find the choice
-        if message.content.startswith("!rps"):
-            locator = 4 #!rps is shorter than !rockpaperscissors (obvious but w/e)
-        else:
-            locator = 18
-                
-        choice_index = new_message.find("rock",locator)
-        choice = "rock"
-            
-        if choice_index == -1:
-            choice = "paper"
-            choice_index = new_message.find("paper",locator)
-            if choice_index == -1:
-                choice_index = new_message.find("scissor",locator)#if someone types scissor over scissors, it gets processed correctly
-                choice = "scissors"
-                if choice_index == -1:
-                    choice_index = new_message.find("stone",locator) #some people prefer stone over rock
-                    choice = "rock"
-                    if choice_index == -1:
-                        choice = "invalid"
-                        
         if choice == "rock" or choice == "paper" or choice == "scissors":
                 
             bot_choice = randint(0,2)
             bc_array = ["rock","paper","scissors"]
                 
-            yield from client.send_message(message.channel, "I choose "+bc_array[bot_choice])
+            yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice])
                 
             #Goes through all the combinations
             if bc_array[bot_choice] == choice:
