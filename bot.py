@@ -78,16 +78,18 @@ def on_message(message):
         #GIFS
         "!flex": "http://i.imgur.com/YdCl7E8.gif",
         "!fuckingmental": "http://i.imgur.com/GiG4nPn.gif",
+        "!girlstreamer": "http://i.imgur.com/2Xm93C5.gif",
         "!lolachamp": "http://i.imgur.com/hsBcxLo.gif",
         "!rarelola": "http://i.imgur.com/yz6c2RE.gif",
         "!sigma": "http://pastebin.com/mM6x75TE",
         "!shoe": "http://i.imgur.com/qEMJJTP.gif",
+        "!wave": " http://i.imgur.com/9lIIaiT.gif",
         "!wutface": "http://i.imgur.com/MH60h6v.gif"
         }
     
     commands_array = ["!online","!memeschool","!commands","!command","!mod","!g4g","!kek","!topkek",\
                       "!age","!chris","!eladia","!kieran","!nick","!sogyoh","!flex", "!fuckingmental",\
-                      "!lolachamp","!rarelola","!sigma","!shoe","!wutface"]
+                      "!girlstreamer","!lolachamp","!rarelola","!sigma","!shoe","!wave","!wutface"]
     
     for i in commands_array:
         if str(message.content[0:12]) == i.casefold():
@@ -103,7 +105,7 @@ def on_message(message):
             
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
-        if number % 3 == 0:
+        if number % 4 == 0:
             yield from client.send_message(message.channel, "Is it?")
         else:
             yield from client.send_message(message.channel, "It isn't")
@@ -141,24 +143,23 @@ def on_message(message):
             bot_choice = randint(0,2)
             bc_array = ["rock","paper","scissors"]
                 
-            yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice])
-                
             #Goes through all the combinations
             if bc_array[bot_choice] == choice:
-                yield from client.send_message(message.channel, "Tie")
+                 outcome = "\nTie"
             elif bot_choice == 0 and choice == "paper":
-                yield from client.send_message(message.channel, "You win!")
+                outcome = "\nYou win!"
             elif bot_choice == 0 and choice == "scissors":
-                yield from client.send_message(message.channel, "You lose...")
+                outcome = "\nYou lose..."
             elif bot_choice == 1 and choice == "rock":
-                yield from client.send_message(message.channel, "You lose")
+                outcome = "\nYou lose"
             elif bot_choice == 1 and choice == "scissors":
-                yield from client.send_message(message.channel, "You win!")
+                outcome = "\nYou win!"
             elif bot_choice == 2 and choice == "rock":
-                yield from client.send_message(message.channel, "You win")
+                outcome = "\nYou win"
             elif bot_choice == 2 and choice == "paper":
-                yield from client.send_message(message.channel, "You lose...")
+                outcome = "\nYou lose..."
                 
+            yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice] + outcome)    
         else:
             yield from client.send_message(message.channel, "Invalid choice.")
             
