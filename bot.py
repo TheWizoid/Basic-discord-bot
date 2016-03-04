@@ -62,9 +62,8 @@ def on_message(message):
         #General
         "!online": "Barry bot is online",
         "!memeschool": "https://www.youtube.com/watch?v=fJdA7dwx6-4",
-        "!commands": "You really expect me to list all these? Bloody hell",
         "!command": "you really expect me to list all these? Bloody hell",
-        "!mod": "Never mod FeelsBadman",
+        "!mod": "Never mod FeelsBadMan",
         "!g4g": "http://www.gamingforgood.net/s/r00kieoftheyear#donate MingLee",
         "!kek": "top kek xD",
         "!topkek": "top kek xD",
@@ -81,18 +80,19 @@ def on_message(message):
         "!girlstreamer": "http://i.imgur.com/2Xm93C5.gif",
         "!lolachamp": "http://i.imgur.com/hsBcxLo.gif",
         "!rarelola": "http://i.imgur.com/yz6c2RE.gif",
+        "!roastme": "https://www.reddit.com/r/RoastMe/comments/45h19g/i_dont_get_attention_from_my_boyfriend_so_i/",
         "!sigma": "http://pastebin.com/mM6x75TE",
         "!shoe": "http://i.imgur.com/qEMJJTP.gif",
         "!wave": " http://i.imgur.com/9lIIaiT.gif",
         "!wutface": "http://i.imgur.com/MH60h6v.gif"
         }
     
-    commands_array = ["!online","!memeschool","!commands","!command","!mod","!g4g","!kek","!topkek",\
+    commands_array = ["!online","!memeschool","!command","!mod","!g4g","!kek","!topkek",\
                       "!age","!chris","!eladia","!kieran","!nick","!sogyoh","!flex", "!fuckingmental",\
-                      "!girlstreamer","!lolachamp","!rarelola","!sigma","!shoe","!wave","!wutface"]
+                      "!girlstreamer","!lolachamp","!rarelola","!roastme","!sigma","!shoe","!wave","!wutface"]
     
     for i in commands_array:
-        if str(message.content[0:12]) == i.casefold():
+        if str(message.content[0:len(i)]) == i.casefold():
             yield from client.send_message(message.channel, commands[i])
             break
         
@@ -121,10 +121,9 @@ def on_message(message):
     
     #kill (only available to bot operator)
     if message.content.startswith("!kill".casefold()):
-##      if discord.Role(message.author) == "mod": #need to figure out how to get message author role
-##          yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
-        if message.author.name == "TheWizoid": #and message.author.id == "99916696600461312":
+        if message.author.name in mod: #need to figure out how to get message author role
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
+            #yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
 
     #Rock, paper, scissors
