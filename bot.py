@@ -1,10 +1,11 @@
 #It works!
-
-import logging
-from datetime import datetime
-import discord
 import asyncio
+import csv
+import discord
+import json
 import os
+import pickle
+from datetime import datetime
 from random import randint
 
 
@@ -24,7 +25,6 @@ modlist.close()
 @client.async_event
 def on_message(message):
     #Chat logger Doesn't work with uploads (displays as a space after the name)
-    
     logging_consent = open("logging_chat.txt","r")
     logging_chat = logging_consent.read()
     logging_consent.close()
@@ -56,46 +56,51 @@ def on_message(message):
         chatlog.write("["+time[0:19]+"]"+message.author.name+":"+message.content+"\n")#slicing the string is easier than importing gmtime and specifying hh:mm:ss lol
         chatlog.close()
         
-    #General stuff
+    commands = pickle.load(open("commands.txt","rb"))
+    commands_array = pickle.load(open("commands_array.txt","rb"))
 
-    commands = {
-        #General
-        "!online": "Barry bot is online",
-        "!memeschool": "https://www.youtube.com/watch?v=fJdA7dwx6-4",
-        "!command": "you really expect me to list all these? Bloody hell",
-        "!mod": "Never mod FeelsBadMan",
-        "!g4g": "http://www.gamingforgood.net/s/r00kieoftheyear#donate MingLee",
-        "!kek": "top kek xD",
-        "!topkek": "top kek xD",
-        "!age": "PedoBear",
-        #People
-        "!chris": "Abusive uncle Chris DansGame",
-        "!eladia": "We miss you BibleThump",
-        "!kieran": "http://i.imgur.com/37274Z1.jpg oi oi kieran",
-        "!nick": "NIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIICK! Kreygasm",
-        "!sogyoh": "TriHard I am so fucking zooted right now CiGrip",
-        #GIFS
-        "!flex": "http://i.imgur.com/YdCl7E8.gif",
-        "!fuckingmental": "http://i.imgur.com/GiG4nPn.gif",
-        "!girlstreamer": "http://i.imgur.com/2Xm93C5.gif",
-        "!lolachamp": "http://i.imgur.com/hsBcxLo.gif",
-        "!rarelola": "http://i.imgur.com/yz6c2RE.gif",
-        "!roastme": "https://www.reddit.com/r/RoastMe/comments/45h19g/i_dont_get_attention_from_my_boyfriend_so_i/",
-        "!sigma": "http://pastebin.com/mM6x75TE",
-        "!shoe": "http://i.imgur.com/qEMJJTP.gif",
-        "!wave": " http://i.imgur.com/9lIIaiT.gif",
-        "!wutface": "http://i.imgur.com/MH60h6v.gif"
-        }
-    
-    commands_array = ["!online","!memeschool","!command","!mod","!g4g","!kek","!topkek",\
-                      "!age","!chris","!eladia","!kieran","!nick","!sogyoh","!flex", "!fuckingmental",\
-                      "!girlstreamer","!lolachamp","!rarelola","!roastme","!sigma","!shoe","!wave","!wutface"]
     
     for i in commands_array:
         if str(message.content[0:len(i)]) == i.casefold():
             yield from client.send_message(message.channel, commands[i])
             break
         
+    #Adding commands
+    if message.content.startswith("!addcom".casefold()) and message.author.name in mod:
+        adding_command = str(message.content).split()
+        if len(adding_command) < 3:
+            yield from client.send_message(message.channel, "Invalid amount of parameters")
+        else:
+            command = adding_command[1]
+            if len(adding_command) == 3:
+                command_text = adding_command[2]
+            else:
+                for i in range(3,len(adding_command)):
+                    adding_command[2] += " " + adding_command[i]
+                    command_text = adding_command[2]
+                
+            commands[command] = command_text
+            commands_array.append(command)
+            pickle.dump(commands, open("commands.txt", "wb"))
+            pickle.dump(commands_array, open("commands_array.txt", "wb"))
+            yield from client.send_message(message.channel, "Command added")
+
+    #Deleting commands
+    if message.content.startswith("!delcom".casefold()) and message.author.name in mod:
+        del_command = str(message.content).split()
+        if len(del_command) < 2:
+            yield from client.send_message(message.channel, "Invalid amount of parameters")
+        else:
+            command = del_command[1]
+            if command not in commands:
+                yield from client.send_message(message.channel, "Command does not exist.")
+            else:
+                del commands[command]
+                commands_array.remove(command)
+                pickle.dump(commands, open("commands.txt", "wb"))
+                pickle.dump(commands_array, open("commands_array.txt", "wb"))
+                yield from client.send_message(message.channel, "Command successfully deleted")
+      
     #Slightly more complex commands than printing in chat        
     if message.content.startswith("!hello".casefold()):
         yield from client.send_message(message.channel, "Hello " + message.author.name)
@@ -125,6 +130,8 @@ def on_message(message):
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
 
+    
+        
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
         
