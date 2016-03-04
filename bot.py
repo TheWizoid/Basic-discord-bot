@@ -1,8 +1,6 @@
 #It works!
 import asyncio
-import csv
 import discord
-import json
 import os
 import pickle
 from datetime import datetime
