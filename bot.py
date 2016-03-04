@@ -1,7 +1,7 @@
 #It works!
 
 import logging
-import datetime
+from datetime import datetime
 import discord
 import asyncio
 import os
@@ -42,16 +42,16 @@ def on_message(message):
         logging_consent.close()
         
     if logging_chat == "True":
-        message.server = str(message.server)
+        server = str(message.server)
         
-        if message.server == "r00kieboys":
+        if server == "r00kieboys":
             chatlog = open("r00kie_chatlog.txt","a")
-        elif message.server == "need for pleb":
+        elif server == "need for pleb":
             chatlog = open("lads_chatlog.txt","a")
-        elif message.server == "Bot test":
+        elif server == "Bot test":
             chatlog = open("test_chatlog.txt","a")
             
-        time = str(datetime.datetime.now())
+        time = str(datetime.now())
         
         chatlog.write("["+time[0:19]+"]"+message.author.name+":"+message.content+"\n")#slicing the string is easier than importing gmtime and specifying hh:mm:ss lol
         chatlog.close()
@@ -121,9 +121,8 @@ def on_message(message):
     
     #kill (only available to bot operator)
     if message.content.startswith("!kill".casefold()):
-        if message.author.name in mod: #need to figure out how to get message author role
+        if message.author.name in mod: 
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
-            #yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
 
     #Rock, paper, scissors
