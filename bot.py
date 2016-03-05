@@ -3,6 +3,7 @@ import asyncio
 import discord
 import os
 import pickle
+import sys
 from datetime import datetime
 from random import randint
 
@@ -22,6 +23,7 @@ modlist.close()
 
 @client.async_event
 def on_message(message):
+    message.content = message.content.lower()
     #Chat logger Doesn't work with uploads (displays as a space after the name)
     logging_consent = open("logging_chat.txt","r")
     logging_chat = logging_consent.read()
@@ -50,24 +52,77 @@ def on_message(message):
             chatlog = open("test_chatlog.txt","a")
             
         time = str(datetime.now())
-        
-        chatlog.write("["+time[0:19]+"]"+message.author.name+":"+message.content+"\n")#slicing the string is easier than importing gmtime and specifying hh:mm:ss lol
-        chatlog.close()
-        
+        try:
+            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
+        except UnicodeEncodeError: #If an emoji is present, it adds one to the amount of that emoji in a dictionary.
+            ##DOESN'T WORK YET
+            ##DOESN'T WORK YET
+            emoji_dict = pickle.load(open("emoji_amount.txt","rb"))
+            start = int("1f1e6", 16)
+            end = int("1f93f", 16) #1 higher than actual end for easier formatting
+            for i in range(start,end):
+                temp = str.lower(hex(i)[4:10])
+                if temp in message.content:
+                    value = hex(i)
+                    emoji_dict[value] += 1
+                    break
+            non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+            print(emoji_dict["0x1f603"])
+            print(emoji_dict["0x1f604"])
+            
+            pickle.dump(emoji_dict,open("emoji_amount.txt","wb"))
+            replaced = str(message.content).translate(non_bmp_map)#should replace the emoji with a placeholder char, but doesn't?
+            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + replaced + "\n")
+            
+            
+        chatlog.close()#emojis cause an error, as they are inputted as text, but don't make a unicode character
+            
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
-
-    
     for i in commands_array:
         if str(message.content[0:len(i)]) == i.casefold():
-            yield from client.send_message(message.channel, commands[i])
-            break
-        
+            if i not in commands:
+                commands_array.remove(i)
+                pickle.dump(commands_array,open("commands_array.txt","wb"))
+            else:
+                temp = commands[i]
+                list_message = message.content.split()
+                if temp.find("#touser") != -1 or temp.find("#user") != -1 or temp.find("#random") != -1:
+                    if temp.find("#touser") != -1:
+                        try:
+                            temp = temp.replace("#touser", str(message.author.name))
+                            yield from client.send_message(message.channel, temp)
+                            break
+                        except IndexError:
+                            yield from client.send_message(message.channel, "Invalid parameters")
+                    
+                    if temp.find("#user") != -1:
+                        try:
+                            temp = temp.replace("#user", list_message[1])
+                            yield from client.send_message(message.channel, temp)
+                            break
+                        except IndexError:
+                            yield from client.send_message(message.channel, "Invalid parameters")
+
+                    if temp.find("#random") != -1:
+                        try:
+                            random_number = temp[temp.find("#random")+7]
+                            temp = temp.replace("#random", str(randint(1,int(random_number))))
+                            temp = temp.replace(random_number, "")
+                            yield from client.send_message(message.channel, temp)
+                            break
+                        except IndexError:
+                            yield from client.send_message(message.channel, "Invalid parameters")
+                else:
+                    yield from client.send_message(message.channel, commands[i])
+
     #Adding commands
     if message.content.startswith("!addcom".casefold()) and message.author.name in mod:
-        adding_command = str(message.content).split()
+        adding_command = message.content.split()
         if len(adding_command) < 3:
             yield from client.send_message(message.channel, "Invalid amount of parameters")
+        elif adding_command[1] in commands:
+            yield from client.send_message(message.channel, "That command already exists")
         else:
             command = adding_command[1]
             if len(adding_command) == 3:
@@ -75,17 +130,38 @@ def on_message(message):
             else:
                 for i in range(3,len(adding_command)):
                     adding_command[2] += " " + adding_command[i]
-                    command_text = adding_command[2]
+                    command_text = adding_command[2]   
                 
             commands[command] = command_text
             commands_array.append(command)
             pickle.dump(commands, open("commands.txt", "wb"))
             pickle.dump(commands_array, open("commands_array.txt", "wb"))
             yield from client.send_message(message.channel, "Command added")
-
+            
+    #Replacing commands
+    if message.content.startswith("!repcom".casefold()) and message.author.name in mod:
+        rep_command = message.content.split()
+        if rep_command[1] not in commands:
+            yield from client.send_message(message.channel, "That command does not exist to be replaced")
+        else:
+            if len(rep_command) < 3:
+                yield from client.send_message(message.channel, "Invalid amount of parameters")
+            else:
+                command = rep_command[1]
+                if len(rep_command) == 3:
+                    command_text = rep_command[2]
+                else:
+                    for i in range(3,len(rep_command)):
+                        rep_command[2] += " " + rep_command[i]
+                        command_text = rep_command[2]
+                commands[command] = command_text
+                pickle.dump(commands, open("commands.txt", "wb"))
+                pickle.dump(commands_array, open("commands_array.txt", "wb"))
+                
+                yield from client.send_message(message.channel, "Command replaced")
     #Deleting commands
     if message.content.startswith("!delcom".casefold()) and message.author.name in mod:
-        del_command = str(message.content).split()
+        del_command = message.content.split()
         if len(del_command) < 2:
             yield from client.send_message(message.channel, "Invalid amount of parameters")
         else:
@@ -99,13 +175,16 @@ def on_message(message):
                 pickle.dump(commands_array, open("commands_array.txt", "wb"))
                 yield from client.send_message(message.channel, "Command successfully deleted")
       
-    #Slightly more complex commands than printing in chat        
-    if message.content.startswith("!hello".casefold()):
-        yield from client.send_message(message.channel, "Hello " + message.author.name)
-        
-    if message.content.startswith("!bye".casefold()):
-        yield from client.send_message(message.channel, "Bye " + message.author.name)
-            
+    #Slightly more complex commands than printing in chat
+    list_of_commands = ""
+    if message.content.startswith("!commands".casefold()):
+        for i in commands_array:
+            try:
+                list_of_commands += i + ", "
+            except KeyError:
+                pass
+        list_of_commands += "!selfdestruct, !rps/!rockpaperscissors, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
+        yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + list_of_commands)
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
         if number % 4 == 0:
@@ -127,44 +206,48 @@ def on_message(message):
         if message.author.name in mod: 
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
+        else:
+            yield from client.send_message(message.channel, "You do not have permission to perform that command.")
 
     
         
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
-        
-        temp_message = message.content.split()
-        choice = temp_message[1].lower()
-        
-        if choice == "stone":
-            choice = "rock"
-        elif choice == "scissor":
-            choice = "scissors"
-            
-        if choice == "rock" or choice == "paper" or choice == "scissors":
-                
-            bot_choice = randint(0,2)
-            bc_array = ["rock","paper","scissors"]
-                
-            #Goes through all the combinations
-            if bc_array[bot_choice] == choice:
-                 outcome = "\nTie"
-            elif bot_choice == 0 and choice == "paper":
-                outcome = "\nYou win!"
-            elif bot_choice == 0 and choice == "scissors":
-                outcome = "\nYou lose..."
-            elif bot_choice == 1 and choice == "rock":
-                outcome = "\nYou lose"
-            elif bot_choice == 1 and choice == "scissors":
-                outcome = "\nYou win!"
-            elif bot_choice == 2 and choice == "rock":
-                outcome = "\nYou win"
-            elif bot_choice == 2 and choice == "paper":
-                outcome = "\nYou lose..."
-                
-            yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice] + outcome)    
+        if len(message.content.split()) == 1:
+            yield from client.send_message(message.channel, "Invalid choice")
         else:
-            yield from client.send_message(message.channel, "Invalid choice.")
+            temp_message = message.content.split()
+            choice = temp_message[1].lower()
+        
+            if choice == "stone":
+                choice = "rock"
+            elif choice == "scissor":
+                choice = "scissors"
+
+            if choice == "rock" or choice == "paper" or choice == "scissors":
+                
+                bot_choice = randint(0,2)
+                bc_array = ["rock","paper","scissors"]
+                
+                #Goes through all the combinations
+                if bc_array[bot_choice] == choice:
+                     outcome = "\nTie"
+                elif bot_choice == 0 and choice == "paper":
+                    outcome = "\nYou win!"
+                elif bot_choice == 0 and choice == "scissors":
+                    outcome = "\nYou lose..."
+                elif bot_choice == 1 and choice == "rock":
+                    outcome = "\nYou lose"
+                elif bot_choice == 1 and choice == "scissors":
+                    outcome = "\nYou win!"
+                elif bot_choice == 2 and choice == "rock":
+                    outcome = "\nYou win"
+                elif bot_choice == 2 and choice == "paper":
+                    outcome = "\nYou lose..."
+                
+                yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice] + outcome)    
+            else:
+                yield from client.send_message(message.channel, "Invalid choice.")
             
             
 @client.async_event
