@@ -23,7 +23,6 @@ modlist.close()
 
 @client.async_event
 def on_message(message):
-    message.content = message.content.lower()
     #Chat logger Doesn't work with uploads (displays as a space after the name)
     logging_consent = open("logging_chat.txt","r")
     logging_chat = logging_consent.read()
