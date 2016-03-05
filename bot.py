@@ -49,6 +49,8 @@ def on_message(message):
             chatlog = open("lads_chatlog.txt","a")
         elif server == "Bot test":
             chatlog = open("test_chatlog.txt","a")
+        elif server == "The Study of The Blade":
+            chatlog = open("sam_chatlog.txt","a")
             
         time = str(datetime.now())
         try:
@@ -79,7 +81,7 @@ def on_message(message):
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
     for i in commands_array:
-        if str(message.content[0:len(i)]) == i.casefold():
+        if str(message.content[0:len(i)+1]) == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
             if i not in commands:
                 commands_array.remove(i)
                 pickle.dump(commands_array,open("commands_array.txt","wb"))
@@ -125,14 +127,15 @@ def on_message(message):
         else:
             command = adding_command[1]
             if len(adding_command) == 3:
-                command_text = adding_command[2]
+                pass
             else:
                 for i in range(3,len(adding_command)):
                     adding_command[2] += " " + adding_command[i]
-                    command_text = adding_command[2]   
-                
+                    
+            command_text = adding_command[2]    
             commands[command] = command_text
             commands_array.append(command)
+            
             pickle.dump(commands, open("commands.txt", "wb"))
             pickle.dump(commands_array, open("commands_array.txt", "wb"))
             yield from client.send_message(message.channel, "Command added")
@@ -148,12 +151,14 @@ def on_message(message):
             else:
                 command = rep_command[1]
                 if len(rep_command) == 3:
-                    command_text = rep_command[2]
+                    pass
                 else:
                     for i in range(3,len(rep_command)):
                         rep_command[2] += " " + rep_command[i]
-                        command_text = rep_command[2]
+                        
+                command_text = rep_command[2]
                 commands[command] = command_text
+                
                 pickle.dump(commands, open("commands.txt", "wb"))
                 pickle.dump(commands_array, open("commands_array.txt", "wb"))
                 
@@ -175,15 +180,20 @@ def on_message(message):
                 yield from client.send_message(message.channel, "Command successfully deleted")
       
     #Slightly more complex commands than printing in chat
-    list_of_commands = ""
-    if message.content.startswith("!commands".casefold()): #Lists the commands avaiable
+    list_of_commands = []
+    str_of_commands = ""
+    if message.content.startswith("!commands".casefold()):
         for i in commands_array:
             try:
-                list_of_commands += i + ", "
+                list_of_commands.append(i)
             except KeyError:
                 pass
-        list_of_commands += "!selfdestruct, !rps/!rockpaperscissors, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
-        yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + list_of_commands)
+        #temp_list_of_commands += "!selfdestruct, !rps/!rockpaperscissors, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
+        list_of_commands = sorted(list_of_commands)
+        for i in list_of_commands:
+            str_of_commands += i + ", "
+        str_of_commands += "!selfdestruct, !rps/!rockpaperscissors, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
+        yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
         if number % 4 == 0:
@@ -191,7 +201,7 @@ def on_message(message):
         else:
             yield from client.send_message(message.channel, "It isn't")
         
-    if message.content.startswith("!selfdestruct".casefold()): #Counts down from 10 then explodes
+    if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:
                 yield from client.send_message(message.channel, ":boom: :man_with_turban: :boom: ")
