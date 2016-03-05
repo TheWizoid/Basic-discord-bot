@@ -177,7 +177,7 @@ def on_message(message):
       
     #Slightly more complex commands than printing in chat
     list_of_commands = ""
-    if message.content.startswith("!commands".casefold()):
+    if message.content.startswith("!commands".casefold()): #Lists the commands avaiable
         for i in commands_array:
             try:
                 list_of_commands += i + ", "
@@ -192,7 +192,7 @@ def on_message(message):
         else:
             yield from client.send_message(message.channel, "It isn't")
         
-    if message.content.startswith("!selfdestruct".casefold()):
+    if message.content.startswith("!selfdestruct".casefold()): #Counts down from 10 then explodes
         for i in range(10,-1,-1):
             if i == 0:
                 yield from client.send_message(message.channel, ":boom: :man_with_turban: :boom: ")
