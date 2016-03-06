@@ -86,31 +86,31 @@ def on_message(message):
                 commands_array.remove(i)
                 pickle.dump(commands_array,open("commands_array.txt","wb"))
             else:
-                temp = commands[i]
+                command_info = commands[i]
                 list_message = message.content.split()
-                if temp.find("#touser") != -1 or temp.find("#user") != -1 or temp.find("#random") != -1:
-                    if temp.find("#touser") != -1:
+                if command_info.find("#touser") != -1 or command_info.find("#user") != -1 or command_info.find("#random") != -1:
+                    if command_info.find("#touser") != -1:
                         try:
-                            temp = temp.replace("#touser", str(message.author.name))
-                            yield from client.send_message(message.channel, temp)
+                            command_info = command_info.replace("#touser", str(message.author.name))
+                            yield from client.send_message(message.channel, command_info)
                             break
                         except IndexError:
                             yield from client.send_message(message.channel, "Invalid parameters")
                     
-                    if temp.find("#user") != -1:
+                    if command_info.find("#user") != -1:
                         try:
-                            temp = temp.replace("#user", list_message[1])
-                            yield from client.send_message(message.channel, temp)
+                            command_info = command_info.replace("#user", list_message[1])
+                            yield from client.send_message(message.channel, command_info)
                             break
                         except IndexError:
                             yield from client.send_message(message.channel, "Invalid parameters")
 
-                    if temp.find("#random") != -1:
+                    if command_info.find("#random") != -1:
                         try:
-                            random_number = temp[temp.find("#random")+7]
-                            temp = temp.replace("#random", str(randint(1,int(random_number))))
-                            temp = temp.replace(random_number, "")
-                            yield from client.send_message(message.channel, temp)
+                            random_number = command_info[command_info.find("#random")+7]
+                            command_info = command_info.replace("#random", str(randint(1,int(random_number))))
+                            command_info = command_info.replace(random_number, "")
+                            yield from client.send_message(message.channel, command_info)
                             break
                         except IndexError:
                             yield from client.send_message(message.channel, "Invalid parameters")
