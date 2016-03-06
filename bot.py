@@ -163,6 +163,7 @@ def on_message(message):
                 pickle.dump(commands_array, open("commands_array.txt", "wb"))
                 
                 yield from client.send_message(message.channel, "Command replaced")
+                
     #Deleting commands
     if message.content.startswith("!delcom".casefold()) and message.author.name in mod:
         del_command = message.content.split()
@@ -178,8 +179,38 @@ def on_message(message):
                 pickle.dump(commands, open("commands.txt", "wb"))
                 pickle.dump(commands_array, open("commands_array.txt", "wb"))
                 yield from client.send_message(message.channel, "Command successfully deleted")
-      
-    #Slightly more complex commands than printing in chat
+    #Command info
+    if message.content.startswith("!commandinfo".casefold()):
+        split_message = message.content.split()
+        if len(split_message) < 2:
+            yield from client.send_message(message.channel, "Invalid amount of parameters")
+        else:
+            command = split_message[1]
+            if command not in commands:
+                if command.startswith("!commands"):
+                    yield from client.send_message(message.channel, "Displays a list of commands.")
+                elif command.startswith("!commandinfo"):
+                    yield from client.send_message(message.channel, "Displays the info of the command, i.e what you're looking at now :P")
+                elif command.startswith("!selfdestruct"):
+                    yield from client.send_message(message.channel, "Counts down from 10 and selfdestructs.")
+                elif command.startswith("!addcom") or command.startswith("!delcom") or command.startswith("!repcom"):
+                    alters_by = "add"
+                    if command[1] == "r":
+                        alters_by = "replace"
+                    elif command[1] == "d":
+                        alters_by = "delete"
+                    yield from client.send_message(message.channel, "Mods can use this to {} commands.".format(alters_by))
+                elif command.startswith("!rps") or command.startswith("!rockpaperscissors"):
+                    yield from client.send_message(message.channel, "Used for playing a game of rock, paper, scissors.")
+                elif command.startswith("!kill"):
+                    yield from client.send_message(message.channel, "Kills the bot.")
+                else:
+                    yield from client.send_message(message.channel, "Command does not exist.")
+            elif commands[command].startswith("http://i.imgur"):
+                yield from client.send_message(message.channel, "Displays an image")
+            else:
+                yield from client.send_message(message.channel, commands[command])
+    #!commands
     list_of_commands = []
     str_of_commands = ""
     if message.content.startswith("!commands".casefold()):
@@ -188,11 +219,10 @@ def on_message(message):
                 list_of_commands.append(i)
             except KeyError:
                 pass
-        #temp_list_of_commands += "!selfdestruct, !rps/!rockpaperscissors, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
         list_of_commands = sorted(list_of_commands)
         for i in list_of_commands:
             str_of_commands += i + ", "
-        str_of_commands += "!selfdestruct, !rps/!rockpaperscissors, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
+        str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
         yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
