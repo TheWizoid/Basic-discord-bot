@@ -51,6 +51,8 @@ def on_message(message):
             chatlog = open("test_chatlog.txt","a")
         elif server == "The Study of The Blade":
             chatlog = open("sam_chatlog.txt","a")
+        else:
+            chatlog = open("misc_server_chatlog.txt","a")
             
         time = str(datetime.now())
         try:
@@ -80,8 +82,9 @@ def on_message(message):
             
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
+    #General Commands
     for i in commands_array:
-        if str(message.content[0:len(i)+1]) == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
+        if str(message.content[0:len(i)+1]).casefold() == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
             if i not in commands:
                 commands_array.remove(i)
                 pickle.dump(commands_array,open("commands_array.txt","wb"))
@@ -210,6 +213,7 @@ def on_message(message):
                 yield from client.send_message(message.channel, "Displays an image")
             else:
                 yield from client.send_message(message.channel, commands[command])
+                
     #!commands
     list_of_commands = []
     str_of_commands = ""
@@ -230,6 +234,18 @@ def on_message(message):
             yield from client.send_message(message.channel, "Is it?")
         else:
             yield from client.send_message(message.channel, "It isn't")
+            
+##    if message.content.startswith("!avatar".casefold()):
+##        split_message = message.content.split()
+##        try:
+##            user = split_message[1]
+##            user_avatar = user
+##            user_avatar = user_avatar.avatar#_url
+##            yield from client.send_message(message.channel, "This user's avatar is " + user_avatar)
+##        except IndexError:
+##            user_avatar = ""
+##            yield from client.send_message(message.channel, "Invalid user")
+##        #user_avatar = avatar(user_avatar)
         
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
@@ -240,7 +256,7 @@ def on_message(message):
             yield from client.send_message(message.channel, "{}".format(i))
 
     
-    #kill (only available to bot operator)
+    #kill (only available to mods)
     if message.content.startswith("!kill".casefold()):
         if message.author.name in mod: 
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
