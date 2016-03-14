@@ -10,3 +10,8 @@ A bot that currently has the following explicit commands:
 !selfdestruct Counts down from 10 and explodes 
 
 This also has a built in chat logger. To opt out of chat logging, simply alter the value in logging_chat.txt to False, or type !chatlogoff
+
+#Requires pip and discord.py
+To install pip go to https://pip.pypa.io/en/stable/installing/ and add C:\Python34\Scripts to your path
+
+To install discord.py, simply type ``pip install git+https://github.com/Rapptz/discord.py``
