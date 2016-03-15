@@ -182,6 +182,7 @@ def on_message(message):
                 pickle.dump(commands, open("commands.txt", "wb"))
                 pickle.dump(commands_array, open("commands_array.txt", "wb"))
                 yield from client.send_message(message.channel, "Command successfully deleted")
+                
     #Command info
     if message.content.startswith("!commandinfo".casefold()):
         split_message = message.content.split()
@@ -225,7 +226,12 @@ def on_message(message):
                 pass
         list_of_commands = sorted(list_of_commands)
         for i in list_of_commands:
-            str_of_commands += i + ", "
+            if "#user" in commands[i]:
+                str_of_commands += i + " <user>, "
+            elif "#touser" in commands[i]:
+                str_of_commands += i +" <author>, "
+            else:
+                str_of_commands += i + ", "
         str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
         yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
     if message.content.startswith("!itis".casefold()):
