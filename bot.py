@@ -102,6 +102,9 @@ def on_message(message):
                     
                     if command_info.find("#user") != -1:
                         try:
+                            for i in range(1,len(list_message)):
+                               if i > 1:
+                                   list_message[1] += " " + list_message[i]
                             command_info = command_info.replace("#user", list_message[1])
                             yield from client.send_message(message.channel, command_info)
                             break
@@ -234,6 +237,7 @@ def on_message(message):
                 str_of_commands += i + ", "
         str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
         yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
+        
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
         if number % 4 == 0:
