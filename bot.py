@@ -7,7 +7,6 @@ import sys
 from datetime import datetime
 from random import randint
 
-
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
 info = accinfo.read().split(";") #splits up username and password
@@ -23,6 +22,8 @@ modlist.close()
 
 @client.async_event
 def on_message(message):
+    global commands
+    global commands_array
     #Chat logger Doesn't work with uploads (displays as a space after the name)
     logging_consent = open("logging_chat.txt","r")
     logging_chat = logging_consent.read()
@@ -52,7 +53,7 @@ def on_message(message):
         elif server == "The Study of The Blade":
             chatlog = open("sam_chatlog.txt","a")
         else:
-            chatlog = open("misc_server_chatlog.txt","a")
+            chatlog = open(server+"_server_chatlog.txt","a")
             
         time = str(datetime.now())
         try:
@@ -82,95 +83,17 @@ def on_message(message):
             
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
+    
     #General Commands
-    for i in commands_array:
-        if str(message.content[0:len(i)+1]).casefold() == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
-            if i not in commands:
-                commands_array.remove(i)
-                pickle.dump(commands_array,open("commands_array.txt","wb"))
-            else:
-                command_info = commands[i]
-                list_message = message.content.split()
-                if command_info.find("#touser") != -1 or command_info.find("#user") != -1 or command_info.find("#random") != -1:
-                    if command_info.find("#touser") != -1:
-                        try:
-                            command_info = command_info.replace("#touser", str(message.author.name))
-                            yield from client.send_message(message.channel, command_info)
-                            break
-                        except IndexError:
-                            yield from client.send_message(message.channel, "Invalid parameters")
-                    
-                    if command_info.find("#user") != -1:
-                        try:
-                            for i in range(1,len(list_message)):
-                               if i > 1:
-                                   list_message[1] += " " + list_message[i]
-                            command_info = command_info.replace("#user", list_message[1])
-                            yield from client.send_message(message.channel, command_info)
-                            break
-                        except IndexError:
-                            yield from client.send_message(message.channel, "Invalid parameters")
-
-                    if command_info.find("#random") != -1:
-                        try:
-                            random_number = command_info[command_info.find("#random")+7]
-                            command_info = command_info.replace("#random", str(randint(1,int(random_number))))
-                            command_info = command_info.replace(random_number, "")
-                            yield from client.send_message(message.channel, command_info)
-                            break
-                        except IndexError:
-                            yield from client.send_message(message.channel, "Invalid parameters")
-                else:
-                    yield from client.send_message(message.channel, commands[i])
+    yield from command_check(message)
 
     #Adding commands
     if message.content.startswith("!addcom".casefold()) and message.author.name in mod:
-        adding_command = message.content.split()
-        if len(adding_command) < 3:
-            yield from client.send_message(message.channel, "Invalid amount of parameters")
-        elif adding_command[1] in commands:
-            yield from client.send_message(message.channel, "That command already exists")
-        else:
-            command = adding_command[1]
-            if "#" in command:
-                command = command.replace("#", " ")
-            if len(adding_command) == 3:
-                pass
-            else:
-                for i in range(3,len(adding_command)):
-                    adding_command[2] += " " + adding_command[i]
-                    
-            command_text = adding_command[2]    
-            commands[command] = command_text
-            commands_array.append(command)
-            
-            pickle.dump(commands, open("commands.txt", "wb"))
-            pickle.dump(commands_array, open("commands_array.txt", "wb"))
-            yield from client.send_message(message.channel, "Command added")
+        yield from add_command(message)
             
     #Replacing commands
-    if message.content.startswith("!repcom".casefold()) and message.author.name in mod:
-        rep_command = message.content.split()
-        if rep_command[1] not in commands:
-            yield from client.send_message(message.channel, "That command does not exist to be replaced")
-        else:
-            if len(rep_command) < 3:
-                yield from client.send_message(message.channel, "Invalid amount of parameters")
-            else:
-                command = rep_command[1]
-                if len(rep_command) == 3:
-                    pass
-                else:
-                    for i in range(3,len(rep_command)):
-                        rep_command[2] += " " + rep_command[i]
-                        
-                command_text = rep_command[2]
-                commands[command] = command_text
-                
-                pickle.dump(commands, open("commands.txt", "wb"))
-                pickle.dump(commands_array, open("commands_array.txt", "wb"))
-                
-                yield from client.send_message(message.channel, "Command replaced")
+    if message.content.startswith("!repcom".casefold()) or message.content.startswith("!editcom".casefold()) and message.author.name in mod:
+        yield from edit_command(message)
                 
     #Deleting commands
     if message.content.startswith("!delcom".casefold()) and message.author.name in mod:
@@ -178,76 +101,30 @@ def on_message(message):
         if len(del_command) < 2:
             yield from client.send_message(message.channel, "Invalid amount of parameters")
         else:
-            command = del_command[1]
-            if "#" in command:
-                command = command.replace("#", " ")
-            if command not in commands:
-                yield from client.send_message(message.channel, "Command does not exist.")
-            else:
-                del commands[command]
-                commands_array.remove(command)
-                pickle.dump(commands, open("commands.txt", "wb"))
-                pickle.dump(commands_array, open("commands_array.txt", "wb"))
-                yield from client.send_message(message.channel, "Command successfully deleted")
-                
+            yield from delete_command(message, del_command[1])
+            yield from client.send_message(message.channel, "Successfully deleted.")
+            
     #Command info
     if message.content.startswith("!commandinfo".casefold()):
-        split_message = message.content.split()
-        if len(split_message) < 2:
-            yield from client.send_message(message.channel, "Invalid amount of parameters")
-        else:
-            command = split_message[1]
-            if command not in commands:
-                if command.startswith("!commands"):
-                    yield from client.send_message(message.channel, "Displays a list of commands.")
-                elif command.startswith("!commandinfo"):
-                    yield from client.send_message(message.channel, "Displays the info of the command, i.e what you're looking at now :P")
-                elif command.startswith("!selfdestruct"):
-                    yield from client.send_message(message.channel, "Counts down from 10 and selfdestructs.")
-                elif command.startswith("!addcom") or command.startswith("!delcom") or command.startswith("!repcom"):
-                    alters_by = "add"
-                    if command[1] == "r":
-                        alters_by = "replace"
-                    elif command[1] == "d":
-                        alters_by = "delete"
-                    yield from client.send_message(message.channel, "Mods can use this to {} commands.".format(alters_by))
-                elif command.startswith("!rps") or command.startswith("!rockpaperscissors"):
-                    yield from client.send_message(message.channel, "Used for playing a game of rock, paper, scissors.")
-                elif command.startswith("!kill"):
-                    yield from client.send_message(message.channel, "Kills the bot.")
-                else:
-                    yield from client.send_message(message.channel, "Command does not exist.")
-            elif commands[command].startswith("http://i.imgur"):
-                yield from client.send_message(message.channel, "Displays an image")
-            else:
-                yield from client.send_message(message.channel, commands[command])
+        yield from command_info(message)
                 
     #!commands
-    list_of_commands = []
-    str_of_commands = ""
     if message.content.startswith("!commands".casefold()):
-        for i in commands_array:
-            try:
-                list_of_commands.append(i)
-            except KeyError:
-                pass
-        list_of_commands = sorted(list_of_commands)
-        for i in list_of_commands:
-            if "#user" in commands[i]:
-                str_of_commands += i + " <user>, "
-            elif "#touser" in commands[i]:
-                str_of_commands += i +" <author>, "
-            else:
-                str_of_commands += i + ", "
-        str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
-        yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
+        yield from list_commands(message)
         
+    #is it?   
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
         if number % 4 == 0:
             yield from client.send_message(message.channel, "Is it?")
         else:
             yield from client.send_message(message.channel, "It isn't")
+
+    #misc testing
+##    if "asdfgh" in message.content: #is censoring possible?
+##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
+##        yield from client.delete_message(message)
+##        yield from client.send_message(message.channel, "{}: ".format(message.author.name) + message.content)
             
 ##    if message.content.startswith("!avatar".casefold()):
 ##        split_message = message.content.split()
@@ -317,8 +194,184 @@ def on_message(message):
                 yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice] + outcome)    
             else:
                 yield from client.send_message(message.channel, "Invalid choice.")
+                
+def command_check(message):
+    """Checks if a command is present at the beginning of a message.
+    If it is in the array of commands, but not the dictionary (i.e there's no key which would cause an error)
+    it is deleted. Otherwise, it simply checks if #user, #touser, or #random are present in the command text.
+    If #touser is present, it will direct the message towards the user, by mentioning their username.
+    If #user is present, the second word will replace it. If there is more than one word after the command,
+    all are included. If #user has not been entered, the bot will send a private message to the author: "Invalid parameters".
+    If #random is present, a random number between 1 and the previously assigned value inclusive (e.g. !dice is !random6).
+    If #random is present, but the command was added without a number (e.g. if !dice was simply #random, instead of #random6),
+    it will send a message to the user stating that the command is not valid, as it does not contain a number to randomise.
+    The command will then be deleted.
+    """
+    for i in commands_array:
+        if str(message.content[0:len(i)+1]).casefold() == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
+            if i not in commands:
+                commands_array.remove(i)
+                pickle.dump(commands_array,open("commands_array.txt","wb"))
+            else:
+                command_info = commands[i]
+                list_message = message.content.split()
+                if command_info.find("#touser") != -1 or command_info.find("#user") != -1 or command_info.find("#random") != -1:
+                    if command_info.find("#touser") != -1:
+                        try:
+                            command_info = command_info.replace("#touser", str(message.author.name))
+                            yield from client.send_message(message.channel, command_info)
+                            break
+                        except IndexError:
+                            yield from client.send_message(message.author, "Invalid parameters")
+                    
+                    if command_info.find("#user") != -1:
+                        try:
+                            for i in range(1,len(list_message)):
+                               if i > 1:
+                                   list_message[1] += " " + list_message[i]
+                            command_info = command_info.replace("#user", list_message[1])
+                            yield from client.send_message(message.channel, command_info)
+                            break
+                        except IndexError:
+                            yield from client.send_message(message.author, "Invalid parameters")
+
+                    if command_info.find("#random") != -1:
+                        try:
+                            random_number = command_info[command_info.find("#random")+7]
+                            command_info = command_info.replace("#random", str(randint(1,int(random_number))))
+                            command_info = command_info.replace(random_number, "")
+                            yield from client.send_message(message.channel, command_info)
+                            break
+                        except IndexError:
+                            yield from client.send_message(message.author, "The way this command was created is not valid, it is being deleted.")
+                            yield from delete_command(message, i)
+                            yield from client.send_message(message.author, "The command has been deleted.")
+                else:
+                    yield from client.send_message(message.channel, commands[i])
+                    
+def list_commands(message):
+    list_of_commands = []
+    str_of_commands = ""
+    for i in commands_array:
+        try:
+            list_of_commands.append(i)
+        except KeyError:
+            pass
+    list_of_commands = sorted(list_of_commands)
+    for i in list_of_commands:
+        if "#user" in commands[i]:
+            str_of_commands += i + " <user>, "
+        elif "#touser" in commands[i]:
+            str_of_commands += i +" <author>, "
+        else:
+            str_of_commands += i + ", "
             
+    str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
+    yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
+    
+def command_info(message):
+    split_message = message.content.split()
+    if len(split_message) < 2:
+        yield from client.send_message(message.channel, "Invalid amount of parameters")
+    else:
+        command = split_message[1]
+        if command not in commands:
+            if command.startswith("!commands"):
+                yield from client.send_message(message.channel, "Displays a list of commands.")
+            elif command.startswith("!commandinfo"):
+                yield from client.send_message(message.channel, "Displays the info of the command, i.e what you're looking at now :P")
+            elif command.startswith("!selfdestruct"):
+                yield from client.send_message(message.channel, "Counts down from 10 and selfdestructs.")
+            elif command.startswith("!addcom") or command.startswith("!delcom") or command.startswith("!repcom"):
+                alters_by = "add"
+                if command[1] == "r":
+                    alters_by = "replace"
+                elif command[1] == "d":
+                    alters_by = "delete"
+                yield from client.send_message(message.channel, "Mods can use this to {} commands.".format(alters_by))
+            elif command.startswith("!rps") or command.startswith("!rockpaperscissors"):
+                yield from client.send_message(message.channel, "Used for playing a game of rock, paper, scissors.")
+            elif command.startswith("!kill"):
+                yield from client.send_message(message.channel, "Kills the bot.")
+            else:
+                yield from client.send_message(message.channel, "Command does not exist.")
+        elif commands[command].startswith("http://i.imgur"):
+            yield from client.send_message(message.channel, "Displays an image")
+        else:
+            yield from client.send_message(message.channel, commands[command])
             
+#Adding commands            
+def add_command(message):
+    """
+    Hypothetically, I could have the bot add commands to itself. What a world.
+    """
+    adding_command = message.content.split()
+    if len(adding_command) < 3:
+        yield from client.send_message(message.channel, "Invalid amount of parameters")
+    elif adding_command[1] in commands:
+        yield from client.send_message(message.channel, "That command already exists")
+    else:
+        command = adding_command[1]
+        if "#" in command:
+            command = command.replace("#", " ")
+        if len(adding_command) == 3:
+            pass
+        else:
+            for i in range(3,len(adding_command)):
+                adding_command[2] += " " + adding_command[i]
+                    
+        command_text = adding_command[2]    
+        commands[command] = command_text
+        commands_array.append(command)
+            
+        pickle.dump(commands, open("commands.txt", "wb"))
+        pickle.dump(commands_array, open("commands_array.txt", "wb"))
+        yield from client.send_message(message.channel, "Command added")
+
+#Deleting commands        
+def delete_command(message, command):
+    """
+    There are times I may want to delete a command, when the user hasn't specified so.
+    E.g. if a user creates an invalid command (such as using #random without a number), it will be deleted.
+    """
+    if "#" in command:
+        command = command.replace("#", " ")
+    if command not in commands:
+        yield from client.send_message(message.channel, "Command does not exist.")
+    else:
+        del commands[command]
+        commands_array.remove(command)
+        pickle.dump(commands, open("commands.txt", "wb"))
+        pickle.dump(commands_array, open("commands_array.txt", "wb"))
+        
+
+#Editing/replacing commands            
+def edit_command(message):
+    """
+    Consistency with the command addition/deletion features.
+    """
+    rep_command = message.content.split()
+    if rep_command[1] not in commands:
+        yield from client.send_message(message.channel, "That command does not exist to be replaced")
+    else:
+        if len(rep_command) < 3:
+            yield from client.send_message(message.channel, "Invalid amount of parameters")
+        else:
+            command = rep_command[1]
+            if len(rep_command) == 3:
+                pass
+            else:
+                for i in range(3,len(rep_command)):
+                    rep_command[2] += " " + rep_command[i]
+                        
+            command_text = rep_command[2]
+            commands[command] = command_text
+                
+            pickle.dump(commands, open("commands.txt", "wb"))
+            pickle.dump(commands_array, open("commands_array.txt", "wb"))
+                
+            yield from client.send_message(message.channel, "Command replaced")
+        
 @client.async_event
 #Displays login name/id
 def on_ready():
