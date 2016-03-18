@@ -132,6 +132,8 @@ def on_message(message):
             yield from client.send_message(message.channel, "That command already exists")
         else:
             command = adding_command[1]
+            if "#" in command:
+                command = command.replace("#", " ")
             if len(adding_command) == 3:
                 pass
             else:
@@ -177,6 +179,8 @@ def on_message(message):
             yield from client.send_message(message.channel, "Invalid amount of parameters")
         else:
             command = del_command[1]
+            if "#" in command:
+                command = command.replace("#", " ")
             if command not in commands:
                 yield from client.send_message(message.channel, "Command does not exist.")
             else:
