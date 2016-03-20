@@ -48,50 +48,49 @@ def command_check(message):
             else:
                 command_info = commands[i]
                 list_message = message.content.split()
-                if command_info.find("#touser") != -1 or command_info.find("#user") != -1\
-                 or command_info.find("#random") != -1 or command_info.find("#authorrandom") != -1:
-                    if command_info.find("#touser") != -1:
-                        try:
-                            command_info = command_info.replace("#touser", str(message.author.name))
-                            yield from client.send_message(message.channel, command_info)
-                            break
-                        except IndexError:
-                            yield from client.send_message(message.author, "Invalid parameters")
+                if "#touser" in command_info:
+                    try:
+                        command_info = command_info.replace("#touser", str(message.author.name))
+                        yield from client.send_message(message.channel, command_info)
+                    except IndexError:
+                        yield from client.send_message(message.author, "Invalid parameters")
+                    break
 
-                    if command_info.find("#user") != -1:
-                        try:
-                            for i in range(1,len(list_message)):
-                               if i > 1:
-                                   list_message[1] += " " + list_message[i]
-                            command_info = command_info.replace("#user", list_message[1])
-                            yield from client.send_message(message.channel, command_info)
-                            break
-                        except IndexError:
-                            yield from client.send_message(message.author, "Invalid parameters")
+                if "#user" in command_info:
+                    try:
+                        for i in range(1,len(list_message)):
+                            if i > 1:
+                                list_message[1] += " " + list_message[i]
+                        command_info = command_info.replace("#user", list_message[1])
+                        yield from client.send_message(message.channel, command_info)
+                    except IndexError:
+                        yield from client.send_message(message.author, "Invalid parameters")
+                    break
 
-                    if command_info.find("#random") != -1:
-                        try:
-                            random_number = command_info[command_info.find("#random")+7]
-                            command_info = command_info.replace("#random", str(randint(1,int(random_number))))
-                            command_info = command_info.replace(random_number, "")
-                            yield from client.send_message(message.channel, command_info)
-                            break
-                        except IndexError:
-                            yield from client.send_message(message.author, "The way this command was created is not valid, it is being deleted.")
-                            yield from delete_command(i)
-                            yield from client.send_message(message.author, "The command has been deleted.")
+                if "#random" in command_info:
+                    try:
+                        random_number = command_info[command_info.find("#random")+7]
+                        command_info = command_info.replace("#random", str(randint(1,int(random_number))))
+                        command_info = command_info.replace(random_number, "")
+                        yield from client.send_message(message.channel, command_info)
+                        break
+                    except IndexError:
+                        yield from client.send_message(message.author, "The way this command was created is not valid, it is being deleted.")
+                        yield from delete_command(i)
+                        yield from client.send_message(message.author, "The command has been deleted.")
 
-                    if command_info.find("#authorrandom") != -1:
-                        try:
-                            max_num = int(list_message[1])
-                            command_info = command_info.replace("#authorrandom", str(randint(1, max_num)))
-                            yield from client.send_message(message.channel, command_info)
-                        except ValueError:
-                            yield from client.send_message(message.author, "That must be a number")
-                        except IndexError:
-                            yield from client.send_message(message.author, "Invalid parameters")
+                if "#authorrandom" in command_info:
+                    try:
+                        max_num = int(list_message[1])
+                        command_info = command_info.replace("#authorrandom", str(randint(1, max_num)))
+                        yield from client.send_message(message.channel, command_info)
+                    except ValueError:
+                        yield from client.send_message(message.author, "That must be a number")
+                    except IndexError:
+                        yield from client.send_message(message.author, "Invalid parameters")
+                    break
 
-                else:
+                if "#" not in command_info:
                     yield from client.send_message(message.channel, commands[i])
 
 
@@ -271,8 +270,6 @@ def rock_paper_scissors(message):
             yield from client.send_message(message.channel, "Invalid choice.")
 
 
-
-
 #Main Body
 @client.async_event
 def on_message(message):
@@ -331,7 +328,6 @@ def on_message(message):
             pickle.dump(emoji_dict,open("emoji_amount.txt","wb"))
             replaced = str(message.content).translate(non_bmp_map)#should replace the emoji with a placeholder char, but doesn't?
             chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + replaced + "\n")
-
 
         chatlog.close()#emojis cause an error, as they are inputted as text, but don't make a unicode character
 
@@ -400,7 +396,6 @@ def on_message(message):
             yield from asyncio.sleep(1)
             yield from client.send_message(message.channel, "{}".format(i))
 
-
     #kill (only available to mods)
     if message.content.startswith("!kill".casefold()):
         if message.author.name in mod:
@@ -408,8 +403,6 @@ def on_message(message):
             os._exit(5)
         else:
             yield from client.send_message(message.channel, "You do not have permission to perform that command.")
-
-
 
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
