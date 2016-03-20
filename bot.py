@@ -21,7 +21,7 @@ mod = mod.split(";")
 modlist.close()
 
 
-#Checks if the command is valid                
+#Checks if the command is valid
 def command_check(message):
     """
     Checks if a command is present at the beginning of a message.
@@ -34,6 +34,11 @@ def command_check(message):
     If #random is present, but the command was added without a number (e.g. if !dice was simply #random, instead of #random6),
     it will send a message to the user stating that the command is not valid, as it does not contain a number to randomise.
     The command will then be deleted.
+    Similar to how #random has a moderator defined maximum, #authorrandom has an author defined one, that is to say
+    that the author defines the maximum value. E.g. a moderator may type !addcom !random #authorrandom.
+    This would allow anyone to type !random 6 and receive a number between 1 and 6, !random 900 to receive a random number
+    between 1 and 900 etc. Also it should be noted that it is simply called #authorrandom isntead of #userrandom, due to
+    annoying interactions with #user that I can't be bothered to fix.
     """
     for i in commands_array:
         if str(message.content[0:len(i)+1]).casefold() == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
@@ -43,7 +48,8 @@ def command_check(message):
             else:
                 command_info = commands[i]
                 list_message = message.content.split()
-                if command_info.find("#touser") != -1 or command_info.find("#user") != -1 or command_info.find("#random") != -1:
+                if command_info.find("#touser") != -1 or command_info.find("#user") != -1\
+                 or command_info.find("#random") != -1 or command_info.find("#authorrandom") != -1:
                     if command_info.find("#touser") != -1:
                         try:
                             command_info = command_info.replace("#touser", str(message.author.name))
@@ -51,7 +57,7 @@ def command_check(message):
                             break
                         except IndexError:
                             yield from client.send_message(message.author, "Invalid parameters")
-                    
+
                     if command_info.find("#user") != -1:
                         try:
                             for i in range(1,len(list_message)):
@@ -72,12 +78,23 @@ def command_check(message):
                             break
                         except IndexError:
                             yield from client.send_message(message.author, "The way this command was created is not valid, it is being deleted.")
-                            yield from delete_command(message, i)
+                            yield from delete_command(i)
                             yield from client.send_message(message.author, "The command has been deleted.")
+
+                    if command_info.find("#authorrandom") != -1:
+                        try:
+                            max_num = int(list_message[1])
+                            command_info = command_info.replace("#authorrandom", str(randint(1, max_num)))
+                            yield from client.send_message(message.channel, command_info)
+                        except ValueError:
+                            yield from client.send_message(message.author, "That must be a number")
+                        except IndexError:
+                            yield from client.send_message(message.author, "Invalid parameters")
+
                 else:
                     yield from client.send_message(message.channel, commands[i])
 
-                    
+
 def list_commands(message):
     list_of_commands = []
     str_of_commands = ""
@@ -94,11 +111,11 @@ def list_commands(message):
             str_of_commands += i +" <author>, "
         else:
             str_of_commands += i + ", "
-            
+
     str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
     yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
 
-    
+
 def command_info(message):
     split_message = message.content.split()
     if len(split_message) < 2:
@@ -130,8 +147,8 @@ def command_info(message):
         else:
             yield from client.send_message(message.channel, commands[command])
 
-            
-#Adding commands            
+
+#Adding commands
 def add_command(message):
     """
     Hypothetically, I could have the bot add commands to itself. What a world.
@@ -161,18 +178,18 @@ def add_command(message):
             else:
                 for i in range(3,len(adding_command)):
                     adding_command[2] += " " + adding_command[i]
-                    
-            command_text = adding_command[2]    
+
+            command_text = adding_command[2]
             commands[command] = command_text
             commands_array.append(command)
-                
+
             pickle.dump(commands, open("commands.txt", "wb"))
             pickle.dump(commands_array, open("commands_array.txt", "wb"))
             yield from client.send_message(message.channel, "Command added")
 
 
-#Deleting commands        
-def delete_command(message, command):
+#Deleting commands
+def delete_command(command):
     """
     There are times I may want to delete a command, when the user hasn't specified so.
     E.g. if a user creates an invalid command (such as using #random without a number), it will be deleted.
@@ -187,8 +204,8 @@ def delete_command(message, command):
         pickle.dump(commands, open("commands.txt", "wb"))
         pickle.dump(commands_array, open("commands_array.txt", "wb"))
 
-        
-#Editing/replacing commands            
+
+#Editing/replacing commands
 def edit_command(message):
     """
     Consistency with the command addition/deletion features.
@@ -206,13 +223,13 @@ def edit_command(message):
             else:
                 for i in range(3,len(rep_command)):
                     rep_command[2] += " " + rep_command[i]
-                        
+
             command_text = rep_command[2]
             commands[command] = command_text
-                
+
             pickle.dump(commands, open("commands.txt", "wb"))
             pickle.dump(commands_array, open("commands_array.txt", "wb"))
-                
+
             yield from client.send_message(message.channel, "Command replaced")
 
 
@@ -222,17 +239,17 @@ def rock_paper_scissors(message):
     else:
         temp_message = message.content.split()
         choice = temp_message[1].lower()
-        
+
         if choice == "stone":
             choice = "rock"
         elif choice == "scissor":
             choice = "scissors"
 
         if choice == "rock" or choice == "paper" or choice == "scissors":
-                
+
             bot_choice = randint(0,2)
             bc_array = ["rock","paper","scissors"]
-                
+
             #Goes through all the combinations
             if bc_array[bot_choice] == choice:
                 outcome = "\nTie"
@@ -248,8 +265,8 @@ def rock_paper_scissors(message):
                 outcome = "\nYou win"
             elif bot_choice == 2 and choice == "paper":
                 outcome = "\nYou lose..."
-                
-            yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice] + outcome)    
+
+            yield from client.send_message(message.channel, "I choose " + bc_array[bot_choice] + outcome)
         else:
             yield from client.send_message(message.channel, "Invalid choice.")
 
@@ -266,21 +283,21 @@ def on_message(message):
     logging_chat = logging_consent.read()
     logging_consent.close()
     #print(message.server) #prints the server name, for adding servers and their logfiles/debugging
-    if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod: 
+    if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod:
         yield from client.send_message(message.channel, "Chatlogging off" )
         logging_consent = open("logging_chat.txt","w")
         logging_consent.write("False")
         logging_consent.close()
-        
+
     if message.content.startswith("!chatlogon".casefold()) and message.author.name in mod:
         yield from client.send_message(message.channel, "Chatlogging on")
         logging_consent = open("logging_chat.txt","w")
         logging_consent.write("True")
         logging_consent.close()
-        
+
     if logging_chat == "True":
         server = str(message.server)
-        
+
         if server == "r00kieboys":
             chatlog = open("r00kie_chatlog.txt","a")
         elif server == "need for pleb":
@@ -291,7 +308,7 @@ def on_message(message):
             chatlog = open("sam_chatlog.txt","a")
         else:
             chatlog = open(server+"_server_chatlog.txt","a")
-            
+
         time = str(datetime.now())
         try:
             chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
@@ -310,46 +327,46 @@ def on_message(message):
             non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
             print(emoji_dict["0x1f603"])
             print(emoji_dict["0x1f604"])
-            
+
             pickle.dump(emoji_dict,open("emoji_amount.txt","wb"))
             replaced = str(message.content).translate(non_bmp_map)#should replace the emoji with a placeholder char, but doesn't?
             chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + replaced + "\n")
-            
-            
+
+
         chatlog.close()#emojis cause an error, as they are inputted as text, but don't make a unicode character
-            
+
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
-    
+
     #General Commands
     yield from command_check(message)
 
     #Adding commands
     if message.content.startswith("!addcom".casefold()) and message.author.name in mod:
         yield from add_command(message)
-            
+
     #Replacing commands
     if message.content.startswith("!repcom".casefold()) or message.content.startswith("!editcom".casefold()) and message.author.name in mod:
         yield from edit_command(message)
-                
+
     #Deleting commands
     if message.content.startswith("!delcom".casefold()) and message.author.name in mod:
         del_command = message.content.split()
         if len(del_command) < 2:
             yield from client.send_message(message.channel, "Invalid amount of parameters")
         else:
-            yield from delete_command(message, del_command[1])
+            yield from delete_command(del_command[1])
             yield from client.send_message(message.channel, "Successfully deleted.")
-            
+
     #Command info
     if message.content.startswith("!commandinfo".casefold()):
         yield from command_info(message)
-                
+
     #!commands
     if message.content.startswith("!commands".casefold()):
         yield from list_commands(message)
-        
-    #is it?   
+
+    #is it?
     if message.content.startswith("!itis".casefold()):
         number = randint(1,10)
         if number % 4 == 0:
@@ -362,7 +379,7 @@ def on_message(message):
 ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
 ##        yield from client.delete_message(message)
 ##        yield from client.send_message(message.channel, "{}: ".format(message.author.name) + message.content)
-            
+
 ##    if message.content.startswith("!avatar".casefold()):
 ##        split_message = message.content.split()
 ##        try:
@@ -374,7 +391,7 @@ def on_message(message):
 ##            user_avatar = ""
 ##            yield from client.send_message(message.channel, "Invalid user")
 ##        #user_avatar = avatar(user_avatar)
-        
+
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:
@@ -383,17 +400,17 @@ def on_message(message):
             yield from asyncio.sleep(1)
             yield from client.send_message(message.channel, "{}".format(i))
 
-    
+
     #kill (only available to mods)
     if message.content.startswith("!kill".casefold()):
-        if message.author.name in mod: 
+        if message.author.name in mod:
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
         else:
             yield from client.send_message(message.channel, "You do not have permission to perform that command.")
 
-    
-        
+
+
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
         yield from rock_paper_scissors(message)
@@ -404,6 +421,5 @@ def on_ready():
     print("Logged in as")
     print(client.user.name)
     print(client.user.id)
-    
-    
+
 client.run(info[0], info[1]) #0 is username, 1 is password.
