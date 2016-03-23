@@ -7,7 +7,7 @@ A bot that currently has the following explicit commands:
 
 !delcom Delete any commands you don't like (if mod)
 
-!live [stream] let's you check if a livestream on twitch is live. It will return if the stream is online/offline, 
+!live [stream] let's you check if a livestream on twitch is live. It will return if the stream is online/offline, if there has been an error proccessing your request, or if the stream doesn't exist.
 
 !rps/!rockpaperscissors
 
