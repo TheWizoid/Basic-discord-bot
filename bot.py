@@ -108,7 +108,7 @@ def list_commands(message):
             pass
 
     list_of_commands = sorted(list_of_commands)
-    
+
     for i in list_of_commands:
         if "#user" in commands[i]:
             str_of_commands += i + " <user>, "
@@ -247,7 +247,7 @@ def edit_command(message):
 
 
 
-def logging(message):
+def logging_config(message):
     if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod:
         yield from client.send_message(message.channel, "Chatlogging off" )
         logging_consent = open(server + "_logging_chat.txt","w")
@@ -373,13 +373,16 @@ def stream_live_check(stream):
 
     try:
         contents = json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
-
         if contents["stream"] == None:
             status = "offline"
+            bot_message = "{} is offline".format(stream)
         else:
-            status = "online"
-
-        bot_message = "{} is {}.".format(stream, status)
+            #print(contents)
+            name = contents["stream"]["channel"]["name"]
+            title = contents["stream"]["channel"]["status"]
+            game = contents["stream"]["channel"]["game"]
+            viewers = contents["stream"]["viewers"]
+            bot_message = "{0} is online.\n{0}'s title is: {1} \n{0} is playing {2} \nThere are {3} viewers \n".format(name,title,game,viewers)
 
     except urllib.error.URLError as e:
         if e.reason == "Not found" or e.reason == "Unprocessable Entity":
@@ -400,7 +403,7 @@ def on_message(message):
     server = str(message.server)
 
     logging_consent(message)
-    yield from logging(message)
+    yield from logging_config(message)
 
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
@@ -443,7 +446,10 @@ def on_message(message):
 
     #Checking if a stream is live using urllib and json
     if message.content.startswith("!live"):
-        bot_message = stream_live_check(message.content.split()[1])
+        try:
+            bot_message = stream_live_check(message.content.split()[1])
+        except IndexError:
+            bot_message = "Invalid parameters"
         yield from client.send_message(message.channel, bot_message)
 
     if message.content.startswith("!selfdestruct".casefold()):
