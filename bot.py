@@ -106,7 +106,9 @@ def list_commands(message):
             list_of_commands.append(i)
         except KeyError:
             pass
+
     list_of_commands = sorted(list_of_commands)
+    
     for i in list_of_commands:
         if "#user" in commands[i]:
             str_of_commands += i + " <user>, "
@@ -115,7 +117,7 @@ def list_commands(message):
         else:
             str_of_commands += i + ", "
 
-    str_of_commands += "!commandinfo, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
+    str_of_commands += "!commandinfo, !live, !rps/!rockpaperscissors, !selfdestruct, !kill\*, !addcom\*, !delcom\*, !repcom\* and !commands."
     yield from client.send_message(message.channel, "The following commands are available (* means mod only): " + str_of_commands)
 
 
@@ -128,23 +130,31 @@ def command_info(message):
         if command not in commands:
             if command.startswith("!commands"):
                 yield from client.send_message(message.channel, "Displays a list of commands.")
+
             elif command.startswith("!commandinfo"):
                 yield from client.send_message(message.channel, "Displays the info of the command, i.e what you're looking at now :P")
+
             elif command.startswith("!selfdestruct"):
                 yield from client.send_message(message.channel, "Counts down from 10 and selfdestructs.")
-            elif command.startswith("!addcom") or command.startswith("!delcom") or command.startswith("!repcom"):
+
+            elif command.startswith("!addcom") or command.startswith("!delcom")\
+             or command.startswith("!editcom") or command.startswith("!repcom"):
                 alters_by = "add"
-                if command[1] == "r":
+                if command[1] in "re": #replace/edit; r/e
                     alters_by = "replace"
                 elif command[1] == "d":
                     alters_by = "delete"
                 yield from client.send_message(message.channel, "Mods can use this to {} commands.".format(alters_by))
+
             elif command.startswith("!rps") or command.startswith("!rockpaperscissors"):
                 yield from client.send_message(message.channel, "Used for playing a game of rock, paper, scissors.")
+
             elif command.startswith("!kill"):
                 yield from client.send_message(message.channel, "Kills the bot.")
+
             else:
                 yield from client.send_message(message.channel, "Command does not exist.")
+
         elif commands[command].startswith("http://i.imgur"):
             yield from client.send_message(message.channel, "Displays an image")
         else:
@@ -236,6 +246,75 @@ def edit_command(message):
             yield from client.send_message(message.channel, "Command replaced")
 
 
+
+def logging(message):
+    if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod:
+        yield from client.send_message(message.channel, "Chatlogging off" )
+        logging_consent = open(server + "_logging_chat.txt","w")
+        logging_consent.write("False")
+        logging_consent.close()
+
+    if message.content.startswith("!chatlogon".casefold()) and message.author.name in mod:
+        yield from client.send_message(message.channel, "Chatlogging on")
+        logging_consent = open(server + "_logging_chat.txt","w")
+        logging_consent.write("True")
+        logging_consent.close()
+
+
+#Checks if logging is allowed on the server
+def logging_consent(message):
+    #Chat logger Doesn't work with uploads (displays as a space after the name)
+    try:
+        logging_consent = open(server + "_logging_chat.txt","r")
+    except FileNotFoundError:
+        logging_consent = open(server + "_logging_chat.txt","w")
+        logging_consent.write("True")
+        logging_consent.close()
+        logging_consent = open(server + "_logging_chat.txt","r")
+
+    logging_chat = logging_consent.read()
+    logging_consent.close()
+
+    if logging_chat == "True":
+
+        if server == "r00kieboys":
+            chatlog = open("r00kie_chatlog.txt","a")
+        elif server == "need for pleb":
+            chatlog = open("lads_chatlog.txt","a")
+        elif server == "Bot test":
+            chatlog = open("test_chatlog.txt","a")
+        elif server == "The Study of The Blade":
+            chatlog = open("sam_chatlog.txt","a")
+        else:
+            chatlog = open(server+"_server_chatlog.txt","a")
+
+        time = str(datetime.now())
+        try:
+            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
+        except UnicodeEncodeError: #If an emoji is present, it adds one to the amount of that emoji in a dictionary.
+            ##DOESN'T WORK YET
+            ##DOESN'T WORK YET
+            emoji_dict = pickle.load(open("emoji_amount.txt","rb"))
+            start = int("1f1e6", 16)
+            end = int("1f93f", 16) #1 higher than actual end for easier formatting
+            for i in range(start,end):
+                temp = str.lower(hex(i)[4:10])
+                if temp in message.content:
+                    value = hex(i)
+                    emoji_dict[value] += 1
+                    break
+            non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
+            print(emoji_dict["0x1f603"])
+            print(emoji_dict["0x1f604"])
+
+            pickle.dump(emoji_dict,open("emoji_amount.txt","wb"))
+            replaced = str(message.content).translate(non_bmp_map)#should replace the emoji with a placeholder char, but doesn't?
+            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + replaced + "\n")
+
+        chatlog.close()#emojis cause an error, as they are inputted as text, but don't make a unicode character
+
+
+#WIP
 def avatar_finder(message):
     ##    if message.content.startswith("!avatar".casefold()):
     ##        split_message = message.content.split()
@@ -288,10 +367,9 @@ def rock_paper_scissors(message):
         else:
             yield from client.send_message(message.channel, "Invalid choice.")
 
-
-def stream_live_check(message):
-    split_message = message.content.split()
-    url = "https://api.twitch.tv/kraken/streams/{}".format(split_message[1])
+#Checking if a livestream on twitch is live
+def stream_live_check(stream):
+    url = "https://api.twitch.tv/kraken/streams/{}".format(stream)
 
     try:
         contents = json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
@@ -301,75 +379,28 @@ def stream_live_check(message):
         else:
             status = "online"
 
-        bot_message = "{0} is {1}.".format(split_message[1].title(), status) #only use .title since it looks nicer, probably shouldn't.
+        bot_message = "{} is {}.".format(stream, status)
 
     except urllib.error.URLError as e:
         if e.reason == "Not found" or e.reason == "Unprocessable Entity":
-            bot_message = "That stream doesn't exist"
+            bot_message = "That stream doesn't exist."
         else:
             bot_message = "There was an error proccessing your request."
 
     return bot_message
+
+
 #Main Body
 @client.async_event
 def on_message(message):
+    global server
     global commands
     global commands_array
-    #Chat logger Doesn't work with uploads (displays as a space after the name)
-    logging_consent = open("logging_chat.txt","r")
-    logging_chat = logging_consent.read()
-    logging_consent.close()
-    #print(message.server) #prints the server name, for adding servers and their logfiles/debugging
-    if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod:
-        yield from client.send_message(message.channel, "Chatlogging off" )
-        logging_consent = open("logging_chat.txt","w")
-        logging_consent.write("False")
-        logging_consent.close()
 
-    if message.content.startswith("!chatlogon".casefold()) and message.author.name in mod:
-        yield from client.send_message(message.channel, "Chatlogging on")
-        logging_consent = open("logging_chat.txt","w")
-        logging_consent.write("True")
-        logging_consent.close()
+    server = str(message.server)
 
-    if logging_chat == "True":
-        server = str(message.server)
-
-        if server == "r00kieboys":
-            chatlog = open("r00kie_chatlog.txt","a")
-        elif server == "need for pleb":
-            chatlog = open("lads_chatlog.txt","a")
-        elif server == "Bot test":
-            chatlog = open("test_chatlog.txt","a")
-        elif server == "The Study of The Blade":
-            chatlog = open("sam_chatlog.txt","a")
-        else:
-            chatlog = open(server+"_server_chatlog.txt","a")
-
-        time = str(datetime.now())
-        try:
-            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
-        except UnicodeEncodeError: #If an emoji is present, it adds one to the amount of that emoji in a dictionary.
-            ##DOESN'T WORK YET
-            ##DOESN'T WORK YET
-            emoji_dict = pickle.load(open("emoji_amount.txt","rb"))
-            start = int("1f1e6", 16)
-            end = int("1f93f", 16) #1 higher than actual end for easier formatting
-            for i in range(start,end):
-                temp = str.lower(hex(i)[4:10])
-                if temp in message.content:
-                    value = hex(i)
-                    emoji_dict[value] += 1
-                    break
-            non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
-            print(emoji_dict["0x1f603"])
-            print(emoji_dict["0x1f604"])
-
-            pickle.dump(emoji_dict,open("emoji_amount.txt","wb"))
-            replaced = str(message.content).translate(non_bmp_map)#should replace the emoji with a placeholder char, but doesn't?
-            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + replaced + "\n")
-
-        chatlog.close()#emojis cause an error, as they are inputted as text, but don't make a unicode character
+    logging_consent(message)
+    yield from logging(message)
 
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
@@ -412,7 +443,7 @@ def on_message(message):
 
     #Checking if a stream is live using urllib and json
     if message.content.startswith("!live"):
-        bot_message = stream_live_check(message)
+        bot_message = stream_live_check(message.content.split()[1])
         yield from client.send_message(message.channel, bot_message)
 
     if message.content.startswith("!selfdestruct".casefold()):
