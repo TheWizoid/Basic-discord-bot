@@ -289,6 +289,27 @@ def rock_paper_scissors(message):
             yield from client.send_message(message.channel, "Invalid choice.")
 
 
+def stream_live_check(message):
+    split_message = message.content.split()
+    url = "https://api.twitch.tv/kraken/streams/{}".format(split_message[1])
+
+    try:
+        contents = json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
+
+        if contents["stream"] == None:
+            status = "offline"
+        else:
+            status = "online"
+
+        bot_message = "{0} is {1}.".format(split_message[1].title(), status) #only use .title since it looks nicer, probably shouldn't.
+
+    except urllib.error.URLError as e:
+        if e.reason == "Not found" or e.reason == "Unprocessable Entity":
+            bot_message = "That stream doesn't exist"
+        else:
+            bot_message = "There was an error proccessing your request."
+
+    return bot_message
 #Main Body
 @client.async_event
 def on_message(message):
@@ -391,25 +412,7 @@ def on_message(message):
 
     #Checking if a stream is live using urllib and json
     if message.content.startswith("!live"):
-        split_message = message.content.split()
-        url = "https://api.twitch.tv/kraken/streams/{}".format(split_message[1])
-
-        try:
-            contents = json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
-
-            if contents["stream"] == None:
-                status = "offline"
-            else:
-                status = "online"
-
-            bot_message = "{0} is {1}.".format(split_message[1].title(), status) #only use .title since it looks nicer, probably shouldn't.
-
-        except urllib.error.URLError as e:
-            if e.reason == "Not found" or e.reason == "Unprocessable Entity":
-                bot_message = "That stream doesn't exist"
-            else:
-                bot_message = "There was an error proccessing your request."
-
+        bot_message = stream_live_check(message)
         yield from client.send_message(message.channel, bot_message)
 
     if message.content.startswith("!selfdestruct".casefold()):
