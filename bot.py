@@ -1,11 +1,15 @@
 #It works!
 import asyncio
 import discord
+import json
 import os
 import pickle
 import sys
 from datetime import datetime
 from random import randint
+import urllib.request
+import urllib.response
+import urllib.error
 
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
@@ -232,6 +236,21 @@ def edit_command(message):
             yield from client.send_message(message.channel, "Command replaced")
 
 
+def avatar_finder(message):
+    ##    if message.content.startswith("!avatar".casefold()):
+    ##        split_message = message.content.split()
+    ##        try:
+    ##            user = split_message[1]
+    ##            user_avatar = user
+    ##            user_avatar = user_avatar.avatar#_url
+    ##            yield from client.send_message(message.channel, "This user's avatar is " + user_avatar)
+    ##        except IndexError:
+    ##            user_avatar = ""
+    ##            yield from client.send_message(message.channel, "Invalid user")
+    ##        #user_avatar = avatar(user_avatar)
+    pass
+
+
 def rock_paper_scissors(message):
     if len(message.content.split()) == 1:
         yield from client.send_message(message.channel, "Invalid choice")
@@ -370,23 +389,28 @@ def on_message(message):
         else:
             yield from client.send_message(message.channel, "It isn't")
 
-    #misc testing
-##    if "asdfgh" in message.content: #is censoring possible?
-##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
-##        yield from client.delete_message(message)
-##        yield from client.send_message(message.channel, "{}: ".format(message.author.name) + message.content)
+    #Checking if a stream is live using urllib and json
+    if message.content.startswith("!live"):
+        split_message = message.content.split()
+        url = "https://api.twitch.tv/kraken/streams/{}".format(split_message[1])
 
-##    if message.content.startswith("!avatar".casefold()):
-##        split_message = message.content.split()
-##        try:
-##            user = split_message[1]
-##            user_avatar = user
-##            user_avatar = user_avatar.avatar#_url
-##            yield from client.send_message(message.channel, "This user's avatar is " + user_avatar)
-##        except IndexError:
-##            user_avatar = ""
-##            yield from client.send_message(message.channel, "Invalid user")
-##        #user_avatar = avatar(user_avatar)
+        try:
+            contents = json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
+
+            if contents["stream"] == None:
+                status = "offline"
+            else:
+                status = "online"
+
+            bot_message = "{0} is {1}.".format(split_message[1].title(), status) #only use .title since it looks nicer, probably shouldn't.
+
+        except urllib.error.URLError as e:
+            if e.reason == "Not found" or e.reason == "Unprocessable Entity":
+                bot_message = "That stream doesn't exist"
+            else:
+                bot_message = "There was an error proccessing your request."
+
+        yield from client.send_message(message.channel, bot_message)
 
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
@@ -407,6 +431,11 @@ def on_message(message):
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
         yield from rock_paper_scissors(message)
+
+    ##    if "asdfgh" in message.content: #is censoring possible?
+    ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
+    ##        yield from client.delete_message(message)
+    ##        yield from client.send_message(message.channel, "{}: ".format(message.author.name) + message.content)
 
 @client.async_event
 #Displays login name/id
