@@ -329,6 +329,7 @@ def avatar_finder(message):
     pass
 
 
+
 def rock_paper_scissors(message):
     if len(message.content.split()) == 1:
         yield from client.send_message(message.channel, "Invalid choice")
@@ -415,9 +416,10 @@ def add_points(message):
     message.author.name = message.author.name.lower()
     points = load_points(message.author.name)
 
+    non_trigger = ["!points","!roulette","!userpoints","!givepoints"]
     if message.author.name not in points:
         points[message.author.name] = 0
-    elif split_message[0] != "!points" and split_message[0] != "!roulette" and split_message[0] != "!userpoints":
+    elif split_message[0] not in non_trigger:
         points[message.author.name] += 1
 
     pickle.dump(points, open(server+"points.txt","wb"))
@@ -429,15 +431,17 @@ def see_points(message):
 
     if points[message.author.name] == 0:
         emote = "FeelsEmoMan"
+    elif points[message.author.name] >= 9000:
+        emote = "forsenSS"
     elif points[message.author.name] >= 1000:
         emote = "PogChamp"
     else:
         emote = "FeelsGoodMan"
 
     if points[message.author.name] != 1:
-        yield from client.send_message(message.channel, "You have {} points {}".format(points[message.author.name],emote))
+        yield from client.send_message(message.channel, "{}: You have {} points {}".format(message.author,points[message.author.name],emote))
     else:
-        yield from client.send_message(message.channel, "You have {} point {}".format(points[message.author.name],emote))
+        yield from client.send_message(message.channel, "{}: You have {} point {}".format(message.author,points[message.author.name],emote))
 
     pickle.dump(points, open(server+"points.txt","wb"))
 
@@ -492,10 +496,9 @@ def userpoints(message, user):
     points = load_points(user)
     list_of_users = []
 
-    #for user_server in client.servers:
-    for member in server.members:
+    for member in message.server.members:
         list_of_users.append(member.name.lower())
-    print(list_of_users)
+    #print(list_of_users)
 
     if user not in points and user not in list_of_users:
         yield from client.send_message(message.author, "That user doesn't exist.")
@@ -506,6 +509,35 @@ def userpoints(message, user):
         points[user] = 0
 
     pickle.dump(points, open(server+"points.txt","wb"))
+
+
+#Allows mods to give users points
+def give_points(message):
+    amount = split_message[1]
+    user = split_message[2].lower()
+    points = load_points(user)
+
+    if len(split_message) < 3:
+        yield from client.send_message(message.author, "Invalid parameters")
+    elif len(split_message) > 3:
+        for i in range(3,len(split_message)):
+            user += " " + split_message[i].lower()
+    try:
+        amount = int(amount)
+    except ValueError:
+        yield from client.send_message(message.author, "The 2nd term must be a whole number.")
+
+    try:
+        points[user] += amount
+    except KeyError:
+        yield from client.send_message(message.author, "That user doesn't exist.")
+
+
+    yield from client.send_message(message.channel, "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author,points[user]))
+    pickle.dump(points, open(server+"points.txt","wb"))
+
+
+
 #Main Body
 @client.async_event
 def on_message(message):
@@ -604,6 +636,11 @@ def on_message(message):
     #!roulette
     if message.content.startswith("!roulette".casefold()):
         yield from bet_points(message)
+
+    #Lets mods give users points
+    if message.content.startswith("!givepoints".casefold()) and message.author.name.lower() in mod:
+        yield from give_points(message)
+
     ##    if "asdfgh" in message.content: #is censoring possible?
     ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
     ##        yield from client.delete_message(message)
