@@ -5,6 +5,7 @@ import json
 import os
 import pickle
 import sys
+import time
 from datetime import datetime
 from random import randint
 import urllib.request
@@ -122,7 +123,6 @@ def list_commands(message):
 
 
 def command_info(message):
-    split_message = message.content.split()
     if len(split_message) < 2:
         yield from client.send_message(message.channel, "Invalid amount of parameters")
     else:
@@ -317,7 +317,6 @@ def logging_consent(message):
 #WIP
 def avatar_finder(message):
     ##    if message.content.startswith("!avatar".casefold()):
-    ##        split_message = message.content.split()
     ##        try:
     ##            user = split_message[1]
     ##            user_avatar = user
@@ -367,9 +366,10 @@ def rock_paper_scissors(message):
         else:
             yield from client.send_message(message.channel, "Invalid choice.")
 
+
 #Checking if a livestream on twitch is live
 def stream_live_check(stream):
-    url = "https://api.twitch.tv/kraken/streams/{}".format(stream)
+    url = "https://api.twitch.tv/kraken/streams/{}".format(stream.lower())
 
     try:
         contents = json.loads(urllib.request.urlopen(url).read().decode("utf-8"))
@@ -393,14 +393,84 @@ def stream_live_check(stream):
     return bot_message
 
 
+def points(message):
+    """
+    Every time someone sends a message, they gain one point.
+    This is because any time based ones would result in mobile users having
+    the same amount of points each, due to idling.
+    """
+
+    try:
+        points = pickle.load(open(server+"points.txt","rb"))
+    except FileNotFoundError:
+        points = {message.author: 0}
+        pickle.dump(points, open(server+"points.txt","wb"))
+
+
+    if message.author not in points:
+        points[message.author] = 0
+    elif split_message[0] != "!points" and split_message[0] != "!roulette":
+        points[message.author] += 1
+
+    if message.content.startswith("!points"):
+        if points[message.author] == 0:
+            emote = "FeelsEmoMan"
+        elif points[message.author] >= 1000:
+            emote = "PogChamp"
+        else:
+            emote = "FeelsGoodMan"
+
+        if points[message.author] != 1:
+            yield from client.send_message(message.channel, "You have {} points {}".format(points[message.author],emote))
+        else:
+            yield from client.send_message(message.channel, "You have {} point {}".format(points[message.author],emote))
+
+    if message.content.startswith("!roulette"):
+        if len(split_message) < 2:
+            yield from client.send_message(message.author, "You must roulette *something*.")
+        else:
+            try:
+                if split_message[1] == "all".casefold():
+                    amount = points[message.author]
+                else:
+                    amount = int(split_message[1])
+                if amount == 0 and points[message.author] == 0:
+                    yield from client.send_message(message.author, "You don't have any points FeelsEmoMan")
+                elif amount == 0:
+                    yield from client.send_message(message.author, "You must roulette *something*.")
+                else:
+                    if amount > points[message.author]:
+                        yield from client.send_message(message.author, "You don't have enough points FeelsEmoMan")
+                    else:
+                        random_integer = randint(0,3)
+                        if random_integer < 2:
+                            outcome = "win"
+                            points[message.author] += amount
+                            emote = "FeelsGoodMan"
+                        else:
+                            outcome = "lost"
+                            points[message.author] -= amount
+                            emote = "FeelsEmoMan"
+
+                        yield from client.send_message(message.channel, "You {} {} points! {}\nYou now have {} points.".format(outcome, amount, emote, points[message.author]))
+            except ValueError:
+                yield from client.send_message(message.author, "Invalid amount.")
+
+    pickle.dump(points, open(server+"points.txt","wb"))
+
+
 #Main Body
 @client.async_event
 def on_message(message):
-    global server
     global commands
     global commands_array
+    global server
+    global split_message
 
+    split_message = message.content.split()
     server = str(message.server)
+
+    yield from points(message)
 
     logging_consent(message)
     yield from logging_config(message)
