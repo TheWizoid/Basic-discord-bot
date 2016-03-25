@@ -250,13 +250,13 @@ def edit_command(message):
 def logging_config(message):
     if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod:
         yield from client.send_message(message.channel, "Chatlogging off" )
-        logging_consent = open(server + "_logging_chat.txt","w")
+        logging_consent = open("{0}_logging_chat.txt".format(server),"w")
         logging_consent.write("False")
         logging_consent.close()
 
     if message.content.startswith("!chatlogon".casefold()) and message.author.name in mod:
         yield from client.send_message(message.channel, "Chatlogging on")
-        logging_consent = open(server + "_logging_chat.txt","w")
+        logging_consent = open("{0}_logging_chat.txt".format(server),"w")
         logging_consent.write("True")
         logging_consent.close()
 
@@ -265,28 +265,19 @@ def logging_config(message):
 def logging_consent(message):
     #Chat logger Doesn't work with uploads (displays as a space after the name)
     try:
-        logging_consent = open(server + "_logging_chat.txt","r")
-    except FileNotFoundError:
-        logging_consent = open(server + "_logging_chat.txt","w")
+        logging_consent = open("{0}_logging_chat.txt".format(server),"r")
+
+    except FileNotFoundError or OSError:
+        logging_consent = open("{0}_logging_chat.txt".format(server),"w")
         logging_consent.write("True")
         logging_consent.close()
-        logging_consent = open(server + "_logging_chat.txt","r")
+        logging_consent = open("{0}_logging_chat.txt".format(server),"r")
 
     logging_chat = logging_consent.read()
     logging_consent.close()
 
     if logging_chat == "True":
-
-        if server == "r00kieboys":
-            chatlog = open("r00kie_chatlog.txt","a")
-        elif server == "need for pleb":
-            chatlog = open("lads_chatlog.txt","a")
-        elif server == "Bot test":
-            chatlog = open("test_chatlog.txt","a")
-        elif server == "The Study of The Blade":
-            chatlog = open("sam_chatlog.txt","a")
-        else:
-            chatlog = open(server+"_server_chatlog.txt","a")
+        chatlog = open("{0}_chatlog.txt".format(server),"a")
 
         time = str(datetime.now())
         try:
@@ -398,10 +389,10 @@ def stream_live_check(stream):
 def load_points(user):
     user = user.lower()
     try:
-        points = pickle.load(open(server+"points.txt","rb"))
+        points = pickle.load(open("{0}points.txt".format(server),"rb"))
     except FileNotFoundError:
         points = {user: 0}
-        pickle.dump(points, open(server+"points.txt","wb"))
+        pickle.dump(points, open("{0}points.txt").format(server),"wb")
 
     return points
 
@@ -422,7 +413,7 @@ def add_points(message):
     elif split_message[0] not in non_trigger:
         points[message.author.name] += 1
 
-    pickle.dump(points, open(server+"points.txt","wb"))
+    pickle.dump(points, open("{0}points.txt".format(server),"wb"))
 
 
 #See your own points
@@ -431,7 +422,7 @@ def see_points(message):
 
     if points[message.author.name] == 0:
         emote = "FeelsEmoMan"
-    elif points[message.author.name] >= 9000:
+    elif points[message.author.name] > 9000:
         emote = "forsenSS"
     elif points[message.author.name] >= 1000:
         emote = "PogChamp"
@@ -443,7 +434,7 @@ def see_points(message):
     else:
         yield from client.send_message(message.channel, "{}: You have {} point {}".format(message.author,points[message.author.name],emote))
 
-    pickle.dump(points, open(server+"points.txt","wb"))
+    pickle.dump(points, open("{0}points.txt".format(server),"wb"))
 
 
 #!roulette
@@ -468,25 +459,29 @@ def bet_points(message):
                 yield from client.send_message(message.author, "You don't have any points FeelsEmoMan")
             elif amount == 0:
                 yield from client.send_message(message.author, "You must roulette *something*.")
+            elif amount < 0:
+                yield from client.send_message(message.author, "You cannot roulette negative points. ")
             else:
                 if amount > points[message.author.name]:
                     yield from client.send_message(message.author, "You don't have enough points FeelsEmoMan")
                 else:
                     random_integer = randint(0,3)
                     if random_integer < 2:
-                        outcome = "win"
+                        outcome = "wins"
                         points[message.author.name] += amount
                         emote = "FeelsGoodMan"
                     else:
-                        outcome = "lost"
+                        outcome = "loses"
                         points[message.author.name] -= amount
                         emote = "FeelsEmoMan"
 
-                    yield from client.send_message(message.channel, "You {} {} points! {}\nYou now have {} points.".format(outcome, amount, emote, points[message.author.name]))
+                    yield from client.send_message(message.channel, \
+                    "{} {} {} points! {}\nYou now have {} points.".format(\
+                    message.author, outcome, amount, emote, points[message.author.name]))
         except ValueError:
             yield from client.send_message(message.author, "Invalid amount.")
 
-    pickle.dump(points, open(server+"points.txt","wb"))
+    pickle.dump(points, open("{0}points.txt".format(server),"wb"))
 
 
 #See someone else's points
@@ -508,7 +503,7 @@ def userpoints(message, user):
         yield from client.send_message(message.channel, "{} has 0 points.".format(user))
         points[user] = 0
 
-    pickle.dump(points, open(server+"points.txt","wb"))
+    pickle.dump(points, open("{0}points.txt".format(server),"wb"))
 
 
 #Allows mods to give users points
@@ -524,6 +519,7 @@ def give_points(message):
             user += " " + split_message[i].lower()
     try:
         amount = int(amount)
+        amount = abs(amount)
     except ValueError:
         yield from client.send_message(message.author, "The 2nd term must be a whole number.")
 
@@ -545,14 +541,15 @@ def on_message(message):
     global commands_array
     global server
     global split_message
+    global path
 
     split_message = message.content.split()
     server = str(message.server)
-
-    add_points(message)
+    path = server+"/{0}/".format(server)
 
     logging_consent(message)
     yield from logging_config(message)
+    add_points(message)
 
     commands = pickle.load(open("commands.txt","rb"))
     commands_array = pickle.load(open("commands_array.txt","rb"))
@@ -639,12 +636,17 @@ def on_message(message):
 
     #Lets mods give users points
     if message.content.startswith("!givepoints".casefold()) and message.author.name.lower() in mod:
-        yield from give_points(message)
+        if len(split_message) >= 3:
+            yield from give_points(message)
+        else:
+            yield from client.send_message(message.author, "Invalid parameters")
 
     ##    if "asdfgh" in message.content: #is censoring possible?
     ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
     ##        yield from client.delete_message(message)
     ##        yield from client.send_message(message.channel, "{}: ".format(message.author.name) + message.content)
+
+
 
 @client.async_event
 #Displays login name/id
