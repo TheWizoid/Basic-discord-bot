@@ -558,20 +558,29 @@ def on_message(message):
     yield from command_check(message)
 
     #Adding commands
-    if message.content.startswith("!addcom".casefold()) and message.author.name.lower() in mod:
-        yield from add_command(message)
+    if message.content.startswith("!addcom".casefold()):
+        if message.author.name.lower() in mod:
+            yield from add_command(message)
+        else:
+            yield from client.send_message(message.author, "You do not have permission to perform that command.")
 
     #Replacing commands
-    if message.content.startswith("!repcom".casefold()) or message.content.startswith("!editcom".casefold()) and message.author.name.lower() in mod:
-        yield from edit_command(message)
+    if message.content.startswith("!repcom".casefold()) or message.content.startswith("!editcom".casefold()):
+        if message.author.name.lower() in mod:
+            yield from edit_command(message)
+        else:
+            yield from client.send_message(message.author, "You do not have permission to perform that command.")
 
     #Deleting commands
-    if message.content.startswith("!delcom".casefold()) and message.author.name.lower() in mod:
-        if len(split_message) < 2:
-            yield from client.send_message(message.channel, "Invalid amount of parameters")
+    if message.content.startswith("!delcom".casefold()):
+        if message.author.name.lower() in mod:
+            if len(split_message) < 2:
+                yield from client.send_message(message.author, "Invalid amount of parameters")
+            else:
+                yield from delete_command(split_message[1])
+                yield from client.send_message(message.channel, "Successfully deleted.")
         else:
-            yield from delete_command(split_message[1])
-            yield from client.send_message(message.channel, "Successfully deleted.")
+            yield from client.send_message(message.author, "You do not have permission to perform that command.")
 
     #Command info
     if message.content.startswith("!commandinfo".casefold()):
@@ -611,7 +620,7 @@ def on_message(message):
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
         else:
-            yield from client.send_message(message.channel, "You do not have permission to perform that command.")
+            yield from client.send_message(message.author, "You do not have permission to perform that command.")
 
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
@@ -635,11 +644,14 @@ def on_message(message):
         yield from bet_points(message)
 
     #Lets mods give users points
-    if message.content.startswith("!givepoints".casefold()) and message.author.name.lower() in mod:
-        if len(split_message) >= 3:
-            yield from give_points(message)
+    if message.content.startswith("!givepoints".casefold()):
+        if message.author.name.lower() in mod:
+            if len(split_message) >= 3:
+                yield from give_points(message)
+            else:
+                yield from client.send_message(message.author, "Invalid parameters")
         else:
-            yield from client.send_message(message.author, "Invalid parameters")
+            yield from client.send_message(message.author, "You do not have permission to perform that command.")
 
     ##    if "asdfgh" in message.content: #is censoring possible?
     ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
