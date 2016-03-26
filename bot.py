@@ -392,10 +392,20 @@ def load_points(user):
         points = pickle.load(open("{0}points.txt".format(server),"rb"))
     except FileNotFoundError:
         points = {user: 0}
-        pickle.dump(points, open("{0}points.txt").format(server),"wb")
+        pickle.dump(points, open("{0}points.txt".format(server),"wb"))
 
     return points
 
+
+def load_messages(user):
+    user = user.lower()
+    try:
+        messages = pickle.load(open("{0}_messages.txt".format(server),"rb"))
+    except FileNotFoundError:
+        messages = {user: 0}
+        pickle.dump(messages, open("{0}_messages.txt".format(server),"wb"))
+
+    return messages
 
 #Point interaction
 def add_points(message):
@@ -406,28 +416,45 @@ def add_points(message):
     """
     message.author.name = message.author.name.lower()
     points = load_points(message.author.name)
+    messages = load_messages(message.author.name)
 
-    non_trigger = ["!points","!roulette","!userpoints","!givepoints"]
+    non_trigger = ["!points","!roulette","!userpoints","!givepoints","!barryroulette"]
+    non_message_trigger = ["!usermessages"]
+    
+    if message.author.name not in messages:
+        messages[message.author.name] = 0
+    elif split_message[0] not in non_message_trigger:
+        messages[message.author.name] += 1
+
     if message.author.name not in points:
         points[message.author.name] = 0
     elif split_message[0] not in non_trigger:
         points[message.author.name] += 1
 
     pickle.dump(points, open("{0}points.txt".format(server),"wb"))
+    pickle.dump(messages, open("{0}_messages.txt".format(server),"wb"))
 
-
-#See your own points
-def see_points(message):
-    points = load_points(message.author.name.lower())
-
+#Sets emotes in points, is its own function due to me using it twice.
+def set_emote(message, points):
     if points[message.author.name] == 0:
         emote = "FeelsEmoMan"
     elif points[message.author.name] > 9000:
         emote = "forsenSS"
     elif points[message.author.name] >= 1000:
         emote = "PogChamp"
+    elif points[message.author.name] == 420:
+        emote = "CiGrip"
     else:
         emote = "FeelsGoodMan"
+
+    return emote
+
+
+#See your own points
+def see_points(message):
+    points = load_points(message.author.name.lower())
+
+    emote = set_emote(message, points)
 
     if points[message.author.name] != 1:
         yield from client.send_message(message.channel, "{}: You have {} points {}".format(message.author,points[message.author.name],emote))
@@ -485,7 +512,7 @@ def bet_points(message):
 
 
 #See someone else's points
-def userpoints(message, user):
+def user_points(message, user):
 
     user = user.lower()
     points = load_points(user)
@@ -498,9 +525,11 @@ def userpoints(message, user):
     if user not in points and user not in list_of_users:
         yield from client.send_message(message.author, "That user doesn't exist.")
     elif user in points:
-        yield from client.send_message(message.channel, "{} has {} points.".format(user, points[user]))
+        emote = set_emote(message, points)
+        yield from client.send_message(message.channel, "{} has {} points {}".format(user, points[user], emote))
     elif user in list_of_users:
-        yield from client.send_message(message.channel, "{} has 0 points.".format(user))
+        emote = "FeelsEmoMan"
+        yield from client.send_message(message.channel, "{} has 0 points {}".format(user, emote))
         points[user] = 0
 
     pickle.dump(points, open("{0}points.txt".format(server),"wb"))
@@ -511,6 +540,7 @@ def give_points(message):
     amount = split_message[1]
     user = split_message[2].lower()
     points = load_points(user)
+
 
     if len(split_message) < 3:
         yield from client.send_message(message.author, "Invalid parameters")
@@ -523,16 +553,46 @@ def give_points(message):
     except ValueError:
         yield from client.send_message(message.author, "The 2nd term must be a whole number.")
 
-    try:
-        points[user] += amount
-    except KeyError:
-        yield from client.send_message(message.author, "That user doesn't exist.")
+    if message.author.name.lower() in mod:
+        try:
+            points[user] += amount
+            yield from client.send_message(message.channel, "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author,points[user]))
+        except KeyError:
+            yield from client.send_message(message.author, "That user doesn't exist.")
+    else:
+        points[message.author.name.lower()] -= amount
+        if points[message.author.name.lower()] < 0:
+            yield from client.send_message(message.author, "You don't have enough points to give away.")
+            points[message.author.name.lower()] += amount
+        else:
+            points[user] += amount
+            yield from client.send_message(message.channel, "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author,points[user]))
 
-
-    yield from client.send_message(message.channel, "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author,points[user]))
     pickle.dump(points, open(server+"points.txt","wb"))
 
 
+def message_amount(message):
+    message.author.name = message.author.name.lower()
+    messages = load_messages(message.author.name)
+
+    pickle.dump(messages, open("{0}_messages.txt".format(server),"wb"))
+    return messages[message.author.name]
+
+def user_message_amount(message, user):
+    user = user.lower()
+    messages = load_messages(user)
+    list_of_users = []
+
+    for member in message.server.members:
+        list_of_users.append(member.name.lower())
+
+    if user not in messages and user not in list_of_users:
+        yield from client.send_message(message.author, "That user doesn't exist.")
+    elif user in messages:
+        yield from client.send_message(message.channel, "{} has sent {} messages.".format(user, messages[user]))
+    elif user in list_of_users:
+        yield from client.send_message(message.channel, "{} has sent 0 messsages.".format(user))
+        messages[user] = 0
 
 #Main Body
 @client.async_event
@@ -633,7 +693,7 @@ def on_message(message):
         else:
             for i in range(2,len(split_message)):
                 split_message[1] += " " + split_message[i]
-            yield from userpoints(message, split_message[1].casefold())
+            yield from user_points(message, split_message[1].casefold())
 
     #!points
     if message.content.startswith("!points".casefold()):
@@ -643,15 +703,25 @@ def on_message(message):
     if message.content.startswith("!roulette".casefold()):
         yield from bet_points(message)
 
-    #Lets mods give users points
+    #Lets perople give each other their points
     if message.content.startswith("!givepoints".casefold()):
-        if message.author.name.lower() in mod:
-            if len(split_message) >= 3:
-                yield from give_points(message)
-            else:
-                yield from client.send_message(message.author, "Invalid parameters")
+        if len(split_message) >= 3:
+            yield from give_points(message)
         else:
-            yield from client.send_message(message.author, "You do not have permission to perform that command.")
+            yield from client.send_message(message.author, "Invalid parameters")
+
+    #Let's a user see the amount of messages they've sent since this has been added (26/5/2016)
+    if message.content.startswith("!messages".casefold()):
+        amount = message_amount(message)
+        yield from client.send_message(message.channel, "You have sent {} messages since 2016-3-26.".format(amount))
+
+    if message.content.startswith("!usermessages".casefold()):
+        if len(split_message) < 2:
+            client.send_message(message.author, "This command requires a user.")
+        else:
+            for i in range(2,len(split_message)):
+                split_message[1] += " " + split_message[i]
+            yield from user_message_amount(message, split_message[1].casefold())
 
     ##    if "asdfgh" in message.content: #is censoring possible?
     ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
