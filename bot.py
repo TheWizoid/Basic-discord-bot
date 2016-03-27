@@ -419,7 +419,7 @@ def add_points(message):
     messages = load_messages(message.author.name)
 
     non_trigger = ["!points","!roulette","!userpoints","!givepoints","!barryroulette"]
-    non_message_trigger = ["!usermessages"]
+    non_message_trigger = ["!usermessages","!messages"]
     
     if message.author.name not in messages:
         messages[message.author.name] = 0
@@ -551,7 +551,7 @@ def give_points(message):
         amount = int(amount)
         amount = abs(amount)
     except ValueError:
-        yield from client.send_message(message.author, "The 2nd term must be a whole number.")
+        yield from client.send_message(message.author, "The 1st term must be a whole number.")
 
     if message.author.name.lower() in mod:
         try:
@@ -713,7 +713,7 @@ def on_message(message):
     #Let's a user see the amount of messages they've sent since this has been added (26/5/2016)
     if message.content.startswith("!messages".casefold()):
         amount = message_amount(message)
-        yield from client.send_message(message.channel, "You have sent {} messages since 2016-3-26.".format(amount))
+        yield from client.send_message(message.channel, "You have sent {} messages.".format(amount))
 
     if message.content.startswith("!usermessages".casefold()):
         if len(split_message) < 2:
