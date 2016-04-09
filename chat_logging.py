@@ -68,7 +68,7 @@ def logging_consent(message):
                 if temp in message.content:
                     value = hex(i)
                     emoji_dict[value] += 1
-                    break
+
             non_bmp_map = dict.fromkeys(range(0x10000, sys.maxunicode + 1), 0xfffd)
             print(emoji_dict["0x1f603"])
             print(emoji_dict["0x1f604"])

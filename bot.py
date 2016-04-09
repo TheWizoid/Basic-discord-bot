@@ -35,22 +35,18 @@ modlist.close()
 #Main Body
 @client.async_event
 def on_message(message):
-    global commands
-    global commands_array
-    global server
-    global split_message
-    global path
 
     split_message = message.content.split()
     server = str(message.server)
     path = server+"/{0}/".format(server)
+    message_author = message.author.name.lower()
 
     chat_logging.logging_consent(message)
     if "!chatlog" in message.content.lower():
         logging_chat = chat_logging.logging_config(message)
         if logging_chat != None:
             yield from client.send_message(message.author, logging_chat)
-    
+
     adding_points = points_stuff.add_points(message)
     if adding_points != True:
         print("An error has occurred.")
@@ -66,7 +62,7 @@ def on_message(message):
 
     #Adding commands
     if message.content.startswith("!addcom".casefold()):
-        if message.author.name.lower() in mod:
+        if message_author in mod:
             added_command = mod_commands.add_command(message)
             yield from client.send_message(message.channel, added_command)
         else:
@@ -74,7 +70,7 @@ def on_message(message):
 
     #Replacing commands
     if message.content.startswith("!repcom".casefold()) or message.content.startswith("!editcom".casefold()):
-        if message.author.name.lower() in mod:
+        if message_author in mod:
             edited_command = mod_commands.edit_command(message)
             yield from client.send_message(message.channel, edited_command)
         else:
@@ -82,14 +78,36 @@ def on_message(message):
 
     #Deleting commands
     if message.content.startswith("!delcom".casefold()):
-        if message.author.name.lower() in mod:
+        if message_author in mod:
             if len(split_message) < 2:
                 yield from client.send_message(message.author, "Invalid amount of parameters")
             else:
-                yield from mod_commands.delete_command(message,split_message[1])
+                mod_commands.delete_command(message,split_message[1])
                 yield from client.send_message(message.channel, "Successfully deleted.")
         else:
             yield from client.send_message(message.author, "You do not have permission to perform that command.")
+
+    #Doesn't work
+    if message.content.startswith("!ban".casefold()):
+        list_of_users = []
+        if message_author in mod:
+            if len(split_message) < 2:
+                yield from client.send_message(message.author, "Invalid user")
+            else:
+                for i in range(2,len(split_message)):
+                    split_message[1] += " " + split_message[i]
+                try:
+                    """for member in message.server.members:
+                        list_of_users.append(member.name.lower())
+                    if split_message[1] in list_of_users:
+                        user = member[]
+                        yield from client.ban()
+                    """
+                    user = split_message[1]
+                    user = user[1:len(user)-4]
+                    yield from client.ban(user)
+                except:
+                    yield from client.send_message(message.author,"User does not exist.")
 
     #Command info
     if message.content.startswith("!commandinfo".casefold()):
@@ -128,7 +146,7 @@ def on_message(message):
 
     #kill (only available to mods)
     if message.content.startswith("!kill".casefold()):
-        if message.author.name.lower() in mod:
+        if message_author in mod:
             yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
             os._exit(5)
         else:
@@ -138,7 +156,7 @@ def on_message(message):
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
         yield from general_commands.rock_paper_scissors(message)
 
-    #!userpoints
+    #!userpointsc
     if message.content.startswith("!userpoints".casefold()):
         if len(split_message) < 2:
             client.send_message(message.author, "This command requires a user.")
@@ -166,6 +184,14 @@ def on_message(message):
         else:
             yield from client.send_message(message.author, "Invalid parameters")
 
+    #Allows mods abuse
+    if message.content.startswith("!setpoints".casefold()):
+        if message_author in mod:
+            points_set_to = points_stuff.set_points(message)
+            yield from client.send_message(message.channel, points_set_to)
+        else:
+            yield from client.send_message(message.author, "You must be a mod to use this command")
+
     #Let's a user see the amount of messages they've sent since this has been added (26/5/2016)
     if message.content.startswith("!messages".casefold()):
         amount = messages.message_amount(message)
@@ -180,10 +206,11 @@ def on_message(message):
             messages_sent = messages.user_message_amount(message, split_message[1].casefold())
             yield from client.send_message(message.channel, messages_sent)
 
+
     ##    if "asdfgh" in message.content: #is censoring possible?
     ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
     ##        yield from client.delete_message(message)
-    ##        yield from client.send_message(message.channel, "{}: ".format(message.author.name) + message.content)
+    ##        yield from client.send_message(message.channel, "{}: ".format(message_author) + message.content)
 
 
 

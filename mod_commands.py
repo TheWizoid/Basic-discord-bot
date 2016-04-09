@@ -66,7 +66,7 @@ def delete_command(message, command):
     if "#" in command:
         command = command.replace("#", " ")
     if command not in commands:
-        yield from client.send_message(message.channel, "Command does not exist.")
+        pass#yield from client.send_message(message.channel, "Command does not exist.")
     else:
         del commands[command]
         commands_array.remove(command)
