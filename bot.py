@@ -35,7 +35,7 @@ modlist.close()
 #Main Body
 @client.async_event
 def on_message(message):
-
+    print(message.author.avatar_url)
     split_message = message.content.split()
     server = str(message.server)
     path = server+"/{0}/".format(server)
@@ -136,14 +136,22 @@ def on_message(message):
         except IndexError:
             bot_message = general_commands.stream_live_check("r00kieoftheyear")
         yield from client.send_message(message.channel, bot_message)
-    """
-    if message.content.startswith("!avatar".casefold()):
-        if len(split_message) >=2:
-            user = split_message[1]
-            for i in range(1,len(split_message)):
-                split_message[1] += " " + split_message[i]
-            yield from client.send_message(message.channel, "This user's avatar is {}".format(user.avatar_url))
-    """
+
+    if message.content.startswith("!info".casefold()):
+        roles = ""
+        for i in range(len(message.author.roles)):
+            message.author.roles[i] = str(message.author.roles[i]).replace("@", "")
+            roles += message.author.roles[i] + " "
+        
+        bot_message = "```"
+        bot_message += "ID: {}\n".format(message.author.id)
+        bot_message += "Username: {0} and {1}\n".format(message.author, message.author.name)
+        bot_message += "Account created: {}\n".format(message.author.created_at)
+        bot_message += "Date joined: {}\n".format(message.author.joined_at)
+        bot_message += "Roles: {}\n".format(roles)
+        bot_message += "Your avatar is {}\n```".format(message.author.avatar_url)
+        yield from client.send_message(message.channel, bot_message)
+
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:

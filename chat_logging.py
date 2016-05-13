@@ -45,8 +45,6 @@ def logging_config(message):
 
 #Checks if logging is allowed on the message.server
 def logging_consent(message):
-
-    #Chat logger Doesn't work with uploads (displays as a space after the name)
     try:
         logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"r")
         for i in logging_consent:
@@ -62,11 +60,13 @@ def logging_consent(message):
     logging_consent.close()
     if logging_chat == "True":
         chatlog = open("{0}/{0}_chatlog.txt".format(message.server),"a")
-
-        time = str(datetime.now())
         try:
+            try:
+                message.content += (" " + str(message.attachments[0]["url"]))
+            except:
+                pass
             print("[{}]{}:{}".format(message.server,message.author.name,message.content))
-            chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
+            chatlog.write("[" +str(message.timestamp)+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
         except UnicodeEncodeError: #If an emoji is present, it adds one to the amount of that emoji in a dictionary.
             ##DOESN'T WORK YET
             ##DOESN'T WORK YET
