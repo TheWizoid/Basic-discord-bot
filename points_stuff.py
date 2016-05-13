@@ -20,13 +20,19 @@ def load_points(message, user):
 
     user = user.lower()
     try:
-        points = pickle.load(open("{0}points.txt".format(str(message.server)),"rb"))
+        points = pickle.load(open("{0}/{0}points.txt".format(str(message.server)),"rb"))
     except FileNotFoundError:
+        try:
+            os.mkdir("{}".format(message.server))
+        except FileExistsError:
+            temp_points = open("{0}/{0}points.txt".format(str(message.server)),"w")
+            temp_points.close()
+            points = pickle.load(open("{0}/{0}points.txt".format(str(message.server)),"wb"))
         points = {user: 0}
-        pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
     except EOFError:
         points = {user: 0}
-        pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
 
     return points
 
@@ -39,27 +45,35 @@ def add_points(message):
     This is because any time based ones would result in mobile users having
     the same amount of each, due to idling.
     """
+
     split_message = message.content.split()
 
     message.author.name = message.author.name.lower()
     points = load_points(message, message.author.name)
     message_amount = messages.load_messages(message, message.author.name)
 
-    non_trigger = ["!points","!roulette","!userpoints","!givepoints","!barryroulette"]
+    non_trigger = ["!points","!roulette","!userpoints","!givepoints","!barryroulette","!rps","!rockpaperscissors"]
     non_message_trigger = ["!usermessages","!messages"]
-
     if message.author.name not in message_amount:
         message_amount[message.author.name] = 0
-    elif split_message[0] not in non_message_trigger:
+    elif len(split_message) == 0 or split_message[0] not in non_message_trigger:
         message_amount[message.author.name] += 1
 
     if message.author.name not in points:
         points[message.author.name] = 0
-    elif split_message[0] not in non_trigger:
+    elif len(split_message) == 0 or split_message[0] not in non_trigger:
         points[message.author.name] += 1
 
-    pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
-    pickle.dump(message_amount, open("{0}_messages.txt".format(str(message.server)),"wb"))
+    try:
+        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+    except FileNotFoundError:
+        try:
+            os.makedir("{}".format(message.server))
+        except FileExistsError:
+            temp_points = open("{0}/{0}points.txt".format(str(message.server)),"w")
+            temp_points.close()
+        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+    pickle.dump(message_amount, open("{0}/{0}_messages.txt".format(str(message.server)),"wb"))
     return True
 
 #Sets emotes in points, is its own function due to me using it twice.
@@ -86,11 +100,11 @@ def see_points(message):
     emote = set_emote(message, points)
 
     if points[message.author.name] != 1:
-        pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
-        return "{}: You have {} points {}".format(message.author,points[message.author.name],emote)
+        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        return "{}: You have {} points {}".format(message.author.name,points[message.author.name],emote)
     else:
-        pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
-        return "{}: You have {} point {}".format(message.author,points[message.author.name],emote)
+        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        return "{}: You have {} point {}".format(message.author.name,points[message.author.name],emote)
 
 
 
@@ -133,8 +147,8 @@ def bet_points(message):
                         outcome = "loses"
                         points[message.author.name] -= amount
                         emote = "FeelsEmoMan"
-                    pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
-                    return"{} {} {} points! {}\nYou now have {} points.".format(message.author, outcome, amount, emote, points[message.author.name])
+                    pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+                    return"{} {} {} points! {}\nYou now have {} points.".format(message.author.name, outcome, amount, emote, points[message.author.name])
         except ValueError:
             return "Invalid amount."
 
@@ -160,7 +174,7 @@ def user_points(message, user):
         emote = "FeelsEmoMan"
         points[user] = 0
 
-    pickle.dump(points, open("{0}points.txt".format(str(message.server)),"wb"))
+    pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
     return "{} has {} points {}".format(user, points[user], emote)
 
 
@@ -190,11 +204,11 @@ def give_points(message):
     except ValueError:
         return "The 1st term must be a whole number."
 
-    if message.author.name.lower() in mod:
+    if message.author.name in mod:
         try:
             points[user] += amount
             pickle.dump(points, open(str(message.server)+"points.txt","wb"))
-            return "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author,points[user])
+            return "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author.name,points[user])
         except KeyError:
             return "That user doesn't exist."
     else:
@@ -205,7 +219,7 @@ def give_points(message):
         else:
             points[user] += amount
             pickle.dump(points, open(str(message.server)+"points.txt","wb"))
-            return "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author,points[user])
+            return "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author.name,points[user])
 
 def set_points(message):
     split_message = message.content.split()

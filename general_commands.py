@@ -15,6 +15,7 @@ import messages
 import general_commands
 import mod_commands
 import chat_logging
+import points_stuff
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
 info = accinfo.read().split(";") #splits up username and password
@@ -163,7 +164,7 @@ def command_info(message):
         else:
             return commands[command]
 
-def rock_paper_scissors(message):
+def rock_paper_scissors(message, user):
 
     if len(message.content.split()) == 1:
         return "Invalid choice"
@@ -177,6 +178,14 @@ def rock_paper_scissors(message):
             choice = "scissors"
 
         if choice == "rock" or choice == "paper" or choice == "scissors":
+            if len(message.content.split()) >= 3:
+                try:
+                    points_bet = int(message.content.split()[2])
+                except:
+                    if message.content.split()[2].lower() == "all":
+                        points_bet = True
+                    else:
+                        points_bet = False
 
             bot_choice = randint(0,2)
             bc_array = ["rock","paper","scissors"]
@@ -189,15 +198,28 @@ def rock_paper_scissors(message):
             elif bot_choice == 0 and choice == "scissors":
                 outcome = "\nYou lose..."
             elif bot_choice == 1 and choice == "rock":
-                outcome = "\nYou lose"
+                outcome = "\nYou lose..."
             elif bot_choice == 1 and choice == "scissors":
                 outcome = "\nYou win!"
             elif bot_choice == 2 and choice == "rock":
                 outcome = "\nYou win"
             elif bot_choice == 2 and choice == "paper":
                 outcome = "\nYou lose..."
+            if points_bet:
+                points = points_stuff.load_points(message, user)
+                if message.content.split()[2].lower() == "all":
+                    points_bet = points[user]
+                if points[user] - points_bet < 0:
+                    return "You don't have enough points to bet FeelsEmoMan"
+                if outcome == "\nYou win":
+                    points[user] += points_bet
+                elif outcome == "\nTie":
+                    pass
+                else:
+                    points[user] -= points_bet
 
-            return "I choose " + bc_array[bot_choice] + outcome
+            pickle.dump(points, open(str(message.server)+"points.txt","wb"))
+            return "I choose " + bc_array[bot_choice] + outcome + "\nYou now have {} points.".format(points[user])
         else:
             return "Invalid choice."
 

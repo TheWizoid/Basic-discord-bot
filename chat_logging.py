@@ -23,13 +23,21 @@ def logging_config(message):
     modlist.close()
 
     if message.content.startswith("!chatlogoff".casefold()) and message.author.name in mod:
-        logging_consent = open("{0}_logging_chat.txt".format(message.server),"w")
+        try:
+            logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"w")
+        except FileNotFoundError:
+            os.mkdir("{}".format(message.server))
+        logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"w")
         logging_consent.write("False")
         logging_consent.close()
         return "Chatlogging off"
 
     if message.content.startswith("!chatlogon".casefold()) and message.author.name in mod:
-        logging_consent = open("{0}_logging_chat.txt".format(message.server),"w")
+        try:
+            logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"w")
+        except FileNotFoundError:
+            os.mkdir("{}".format(message.server))
+        logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"w")
         logging_consent.write("True")
         logging_consent.close()
         return "Chatlogging on"
@@ -40,22 +48,24 @@ def logging_consent(message):
 
     #Chat logger Doesn't work with uploads (displays as a space after the name)
     try:
-        logging_consent = open("{0}_logging_chat.txt".format(message.server),"r")
-
-    except FileNotFoundError or OSError:
-        logging_consent = open("{0}_logging_chat.txt".format(message.server),"w")
+        logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"r")
+        for i in logging_consent:
+            if i == "":
+                raise FileNotFoundError
+    except:
+        os.mkdir("{}".format(message.server))
+        logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"w")
         logging_consent.write("True")
-        logging_consent.close()
-        logging_consent = open("{0}_logging_chat.txt".format(message.server),"r")
-
+    logging_consent.close()
+    logging_consent = open("{0}/{0}_logging_chat.txt".format(message.server),"r")
     logging_chat = logging_consent.read()
     logging_consent.close()
-
     if logging_chat == "True":
-        chatlog = open("{0}_chatlog.txt".format(message.server),"a")
+        chatlog = open("{0}/{0}_chatlog.txt".format(message.server),"a")
 
         time = str(datetime.now())
         try:
+            print("[{}]{}:{}".format(message.server,message.author.name,message.content))
             chatlog.write("[" +time[0:19]+ "]"+ message.author.name + ":" + message.content + "\n")#slicing the string is easier than specifying hh:mm:ss lol
         except UnicodeEncodeError: #If an emoji is present, it adds one to the amount of that emoji in a dictionary.
             ##DOESN'T WORK YET

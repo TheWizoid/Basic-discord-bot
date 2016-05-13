@@ -17,13 +17,18 @@ def load_messages(message, user):
 
     user = user.lower()
     try:
-        messages = pickle.load(open("{0}_messages.txt".format(message.server),"rb"))
+        messages = pickle.load(open("{0}/{0}_messages.txt".format(message.server),"rb"))
     except FileNotFoundError:
+        try:
+            os.mkdir("{}".format(message.server))
+        except FileExistsError:
+            temp_messages = open("{0}/{0}_messages.txt".format(str(message.server)),"w")
+            temp_messages.close()
         messages = {user: 0}
-        pickle.dump(messages, open("{0}_messages.txt".format(message.server),"wb"))
+        pickle.dump(messages, open("{0}/{0}_messages.txt".format(message.server),"wb"))
     except EOFError:
         messages = {user: 0}
-        pickle.dump(messages, open("{0}_messages.txt".format(message.server),"wb"))
+        pickle.dump(messages, open("{0}/{0}_messages.txt".format(message.server),"wb"))
 
     return messages
 
@@ -32,7 +37,8 @@ def message_amount(message):
     message.author.name = message.author.name.lower()
     messages = load_messages(message, message.author.name)
 
-    pickle.dump(messages, open("{0}_messages.txt".format(message.server),"wb"))
+    pickle.dump(messages, open("{0}/{0}_messages.txt".format(message.server),"wb"))
+    
     return messages[message.author.name]
 
 def user_message_amount(message, user):

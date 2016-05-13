@@ -39,7 +39,8 @@ def on_message(message):
     split_message = message.content.split()
     server = str(message.server)
     path = server+"/{0}/".format(server)
-    message_author = message.author.name.lower()
+    message.author.name = message.author.name.lower()
+    message_author = message.author.name
 
     chat_logging.logging_consent(message)
     if "!chatlog" in message.content.lower():
@@ -129,13 +130,20 @@ def on_message(message):
             yield from client.send_message(message.channel, "It isn't")
 
     #Checking if a stream is live using urllib and json
-    if message.content.startswith("!live"):
+    if message.content.startswith("!live".casefold()):
         try:
             bot_message = general_commands.stream_live_check(message.content.split()[1])
         except IndexError:
             bot_message = general_commands.stream_live_check("r00kieoftheyear")
         yield from client.send_message(message.channel, bot_message)
-
+    """
+    if message.content.startswith("!avatar".casefold()):
+        if len(split_message) >=2:
+            user = split_message[1]
+            for i in range(1,len(split_message)):
+                split_message[1] += " " + split_message[i]
+            yield from client.send_message(message.channel, "This user's avatar is {}".format(user.avatar_url))
+    """
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:
@@ -154,7 +162,8 @@ def on_message(message):
 
     #Rock, paper, scissors
     if message.content.startswith("!rps".casefold()) or message.content.startswith("!rockpaperscissors".casefold()):
-        yield from general_commands.rock_paper_scissors(message)
+        result = general_commands.rock_paper_scissors(message, message.author.name)
+        yield from client.send_message(message.channel, result)
 
     #!userpointsc
     if message.content.startswith("!userpoints".casefold()):
@@ -173,6 +182,7 @@ def on_message(message):
 
     #!roulette
     if message.content.startswith("!roulette".casefold()):
+        message.content = message.content.lower()
         roulette_result = points_stuff.bet_points(message)
         yield from client.send_message(message.channel, roulette_result)
 
