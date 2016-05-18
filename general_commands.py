@@ -51,24 +51,23 @@ def command_check(message):
             else:
                 command_info = commands[i]
                 list_message = message.content.split()
-                if "#touser" in command_info:
-                    try:
-                        command_info = command_info.replace("#touser", str(message.author.name))
-                        return  command_info
-                    except IndexError:
-                        return send_message(message.author, "Invalid parameters")
-                    break
-
                 if "#user" in command_info:
                     try:
                         for i in range(1,len(list_message)):
                             if i > 1:
                                 list_message[1] += " " + list_message[i]
                         command_info = command_info.replace("#user", list_message[1])
-                        return command_info
                     except IndexError:
-                        return "Invalid parameters"
-                    break
+                        command_info = command_info.replace("#user", message.author.name)
+                    return command_info
+
+                if "#touser" in command_info:
+                    try:
+                        command_info = command_info.replace("#touser", str(message.author.name))
+                        return  command_info
+                    except IndexError:
+                        return send_message(message.author, "Invalid parameters")
+
 
                 if "#random" in command_info:
                     try:
@@ -90,7 +89,7 @@ def command_check(message):
                         return "That must be a number"
                     except IndexError:
                         return "Invalid parameters"
-                    break
+                    
 
                 if "#" not in command_info:
                     return commands[i]
@@ -111,7 +110,10 @@ def list_commands(message):
     list_of_commands = sorted(list_of_commands)
 
     for i in list_of_commands:
-        if "#user" in commands[i]:
+        if "*" in i:
+            edited = i.replace("*","\*")
+            str_of_commands += edited + ", "
+        elif "#user" in commands[i]:
             str_of_commands += i + " <user>, "
         elif "#touser" in commands[i]:
             str_of_commands += i +" <author>, "
