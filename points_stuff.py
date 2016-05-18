@@ -20,19 +20,19 @@ def load_points(message, user):
 
     user = user.lower()
     try:
-        points = pickle.load(open("{0}/{0}points.txt".format(str(message.server)),"rb"))
+        points = pickle.load(open("{0}/{0}_points.txt".format(str(message.server)),"rb"))
     except FileNotFoundError:
         try:
             os.mkdir("{}".format(message.server))
         except FileExistsError:
-            temp_points = open("{0}/{0}points.txt".format(str(message.server)),"w")
+            temp_points = open("{0}/{0}_points.txt".format(str(message.server)),"w")
             temp_points.close()
-            points = pickle.load(open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+            points = pickle.load(open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
         points = {user: 0}
-        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
     except EOFError:
         points = {user: 0}
-        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
 
     return points
 
@@ -65,14 +65,14 @@ def add_points(message):
         points[message.author.name] += 1
 
     try:
-        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
     except FileNotFoundError:
         try:
             os.makedir("{}".format(message.server))
         except FileExistsError:
-            temp_points = open("{0}/{0}points.txt".format(str(message.server)),"w")
+            temp_points = open("{0}/{0}_points.txt".format(str(message.server)),"w")
             temp_points.close()
-        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
     pickle.dump(message_amount, open("{0}/{0}_messages.txt".format(str(message.server)),"wb"))
     return True
 
@@ -100,10 +100,10 @@ def see_points(message):
     emote = set_emote(message, points)
 
     if points[message.author.name] != 1:
-        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
         return "{}: You have {} points {}".format(message.author.name,points[message.author.name],emote)
     else:
-        pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+        pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
         return "{}: You have {} point {}".format(message.author.name,points[message.author.name],emote)
 
 
@@ -147,7 +147,7 @@ def bet_points(message):
                         outcome = "loses"
                         points[message.author.name] -= amount
                         emote = "FeelsEmoMan"
-                    pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+                    pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
                     return"{} {} {} points! {}\nYou now have {} points.".format(message.author.name, outcome, amount, emote, points[message.author.name])
         except ValueError:
             return "Invalid amount."
@@ -174,7 +174,7 @@ def user_points(message, user):
         emote = "FeelsEmoMan"
         points[user] = 0
 
-    pickle.dump(points, open("{0}/{0}points.txt".format(str(message.server)),"wb"))
+    pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
     return "{} has {} points {}".format(user, points[user], emote)
 
 
@@ -207,7 +207,7 @@ def give_points(message):
     if message.author.name in mod:
         try:
             points[user] += amount
-            pickle.dump(points, open(str(message.server)+"points.txt","wb"))
+            pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
             return "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author.name,points[user])
         except KeyError:
             return "That user doesn't exist."
@@ -218,7 +218,7 @@ def give_points(message):
             points[message.author.name.lower()] += amount
         else:
             points[user] += amount
-            pickle.dump(points, open(str(message.server)+"points.txt","wb"))
+            pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
             return "{} was just given {} points by {}, and now has {} points!".format(user,amount,message.author.name,points[user])
 
 def set_points(message):
@@ -242,5 +242,5 @@ def set_points(message):
         return "The 1st term must be a whole number."
 
     points[user] = amount
-    pickle.dump(points, open(str(message.server)+"points.txt","wb"))
+    pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
     return "{} has had their points set to {}\nMOD ABUSE DansGame".format(user, amount)
