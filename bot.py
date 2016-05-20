@@ -3,20 +3,25 @@ import asyncio
 import discord
 import json
 import os
+import pafy
 import pickle
+import simplejson
 import sys
 import time
 from datetime import datetime
 from random import randint
+import urllib
 import urllib.request
 import urllib.response
 import urllib.error
+import youtube_dl
 
 import points_stuff
 import messages
 import general_commands
 import mod_commands
 import chat_logging
+import music
 
 #this block is for privacy :>
 accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
@@ -25,7 +30,7 @@ accinfo.close()
 #this block is for privacy :>
 
 client = discord.Client()
-client.login("username","password")
+client.login(info[0],info[1])
 
 modlist = open("modlist.txt","r")
 mod = modlist.read()#List of mods on 1 line, edit at your pleasure
@@ -35,10 +40,8 @@ modlist.close()
 #Main Body
 @client.async_event
 def on_message(message):
-    print(message.author.avatar_url)
     split_message = message.content.split()
     server = str(message.server)
-    path = server+"/{0}/".format(server)
     message.author.name = message.author.name.lower()
     message_author = message.author.name
 
@@ -142,7 +145,7 @@ def on_message(message):
         for i in range(len(message.author.roles)):
             message.author.roles[i] = str(message.author.roles[i]).replace("@", "")
             roles += message.author.roles[i] + " "
-        
+
         bot_message = "```"
         bot_message += "ID: {}\n".format(message.author.id)
         bot_message += "Username: {0} and {1}\n".format(message.author, message.author.name)
@@ -229,9 +232,41 @@ def on_message(message):
     ##        message.content = message.content.replace("asdfgh","memes")#yes, apparently
     ##        yield from client.delete_message(message)
     ##        yield from client.send_message(message.channel, "{}: ".format(message_author) + message.content)
+    if message.content.startswith("!songrequest") and len(split_message) >= 2:
+        song_added = music.add_song(message)
+        yield from client.send_message(message.channel, song_added)
 
-
-
+    if message.content.startswith("!songson"):
+        channel_list = []
+        for server in client.servers:
+            for channel in server.channels:
+                channel_list.append(channel)
+        for i in channel_list:
+            #print(i.voice_members)
+            if message.author in i.voice_members:
+                voice_channel = i
+                break
+        try:
+            voice = yield from client.join_voice_channel(voice_channel)
+        except discord.errors.ClientException:
+            pass
+        songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
+        #print(songlist)
+        while songlist:
+            player = yield from voice.create_ytdl_player(songlist[0])
+            song_id = songlist[0][len(songlist[0])-11:len(songlist[0])]
+            url = 'https://youtube.com/watch?v={0}'.format(song_id)
+            video = pafy.new(url)
+            player.start()
+            del songlist[0]
+            pickle.dump(songlist,open("{0}/{0}_songlist.txt".format(str(message.server)),"wb"))
+            yield from client.send_message(message.channel, "Now playing: **{0}**\nIt is **{1}** long.".format(video.title,video.duration))
+            yield from asyncio.sleep(video.length)
+            
+    
+    if message.content.startswith("!songlist" or "!queue"):
+        songlist = music.get_queue(message)
+        yield from client.send_message(message.channel, songlist)
 
 @client.async_event
 #Displays login name/id
