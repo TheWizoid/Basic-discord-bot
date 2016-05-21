@@ -41,29 +41,26 @@ def add_song(message):
             songlist.close()
         songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
     if "youtu.be/" in song or "youtube.com" in song:
-        if "&" in song:
-            return "No playlist or time links"
-        songlist.append(song)
+        video = pafy.new(song)
+        if video.length <= 600:
+            songlist.append(song)
+        else:
+            return "Songs must 10 minutes or less"
     else:
         return "Invalid song request"
     for i in range(len(songlist)):
         songlist[i] = str(songlist[i])
     pickle.dump(songlist, open("{0}/{0}_songlist.txt".format(str(message.server)), "wb"))
-    #json = simplejson.load(urllib.urlopen(song))
+
     return "Your song has been added"
 
-#I'll fix it sometime soon 
+#Fixed
 def get_queue(message):
     bot_message = "The current queue is:\n"
-    songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
-    id_list = []
-    for i in range(len(songlist)):
-        id_list += songlist[i][len(songlist[i])-11:len(songlist[i])]
-    print(id_list)
-    for i in range(len(id_list)):
-        song_id = songlist[i][len(songlist[i])-11:len(songlist[i])]
-        url = 'https://youtube.com/watch?v={0}'.format(song_id)
-        video = pafy.new(url)
+    songlist = pickle.load(open("{0}/{0}_gachilist.txt".format(str(message.server)),"rb"))
+    print(songlist)
+    for i in songlist:
+        video = pafy.new(i)
         title = video.title
         bot_message += "**{}**\n".format(title)
     return bot_message

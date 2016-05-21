@@ -252,18 +252,17 @@ def on_message(message):
             pass
         songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
         #print(songlist)
-        while songlist:
+        while len(songlist) > 0:
             player = yield from voice.create_ytdl_player(songlist[0])
-            song_id = songlist[0][len(songlist[0])-11:len(songlist[0])]
-            url = 'https://youtube.com/watch?v={0}'.format(song_id)
+            url = songlist[0]
             video = pafy.new(url)
             player.start()
             del songlist[0]
             pickle.dump(songlist,open("{0}/{0}_songlist.txt".format(str(message.server)),"wb"))
-            yield from client.send_message(message.channel, "Now playing: **{0}**\nIt is **{1}** long.".format(video.title,video.duration))
-            yield from asyncio.sleep(video.length)
-            
-    
+            yield from client.send_message(message.channel, "Now playing: **{0}**\nIt is **{1}** long.".format(video.title,video.duration[3:len(video.duration)]))
+            yield from asyncio.sleep(video.length-5)
+
+
     if message.content.startswith("!songlist" or "!queue"):
         songlist = music.get_queue(message)
         yield from client.send_message(message.channel, songlist)
