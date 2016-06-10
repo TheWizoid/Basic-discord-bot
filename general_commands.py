@@ -89,7 +89,7 @@ def command_check(message):
                         return "That must be a number"
                     except IndexError:
                         return "Invalid parameters"
-                    
+
 
                 if "#" not in command_info:
                     return commands[i]
@@ -186,8 +186,8 @@ def rock_paper_scissors(message, user):
                 except:
                     if message.content.split()[2].lower() == "all":
                         points_bet = True
-                    else:
-                        points_bet = False
+            else:
+                points_bet = False
 
             bot_choice = randint(0,2)
             bc_array = ["rock","paper","scissors"]
@@ -204,24 +204,25 @@ def rock_paper_scissors(message, user):
             elif bot_choice == 1 and choice == "scissors":
                 outcome = "\nYou win!"
             elif bot_choice == 2 and choice == "rock":
-                outcome = "\nYou win"
+                outcome = "\nYou win!"
             elif bot_choice == 2 and choice == "paper":
                 outcome = "\nYou lose..."
+            points_message = ""
             if points_bet:
                 points = points_stuff.load_points(message, user)
                 if message.content.split()[2].lower() == "all":
                     points_bet = points[user]
                 if points[user] - points_bet < 0:
                     return "You don't have enough points to bet FeelsEmoMan"
-                if outcome == "\nYou win":
+                if outcome == "\nYou win!":
                     points[user] += points_bet
                 elif outcome == "\nTie":
                     pass
                 else:
-                    points[user] -= points_bet
-
-            pickle.dump(points, open(str(message.server)+"points.txt","wb"))
-            return "I choose " + bc_array[bot_choice] + outcome + "\nYou now have {} points.".format(points[user])
+                    points[user] = points[user] - points_bet
+                points_message = "\nYou now have {} points.".format(points[user])
+                pickle.dump(points, open("{0}/{0}_points.txt".format(str(message.server)),"wb"))
+            return "I choose " + bc_array[bot_choice] + outcome + points_message
         else:
             return "Invalid choice."
 
@@ -251,3 +252,21 @@ def stream_live_check(stream):
             bot_message = "There was an error proccessing your request."
 
     return bot_message
+
+def eight_ball():
+    response = [
+    "It is certain",
+    "It is decidedly so",
+    "Without a doubt",
+    "Yes, definitely",
+    "You may rely on it",
+    "As I see it, yes",
+    "Most likely",
+    "Yes",
+    "Signs point to yes",
+    "Don't count on it",
+    "My reply is no",
+    "My sources say no",
+    "Very doubtful"]
+    index = randint(0,12)
+    return response[index]

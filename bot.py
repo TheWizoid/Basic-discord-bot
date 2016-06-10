@@ -236,7 +236,7 @@ def on_message(message):
         song_added = music.add_song(message)
         yield from client.send_message(message.channel, song_added)
 
-    if message.content.startswith("!songson"):
+    if message.content.startswith("!songson") or (message.content.startswith("!skipsong") and message.content.user.lower() in mod):
         channel_list = []
         for server in client.servers:
             for channel in server.channels:
@@ -250,22 +250,27 @@ def on_message(message):
             voice = yield from client.join_voice_channel(voice_channel)
         except discord.errors.ClientException:
             pass
-        songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
         #print(songlist)
+        songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
         while len(songlist) > 0:
+            songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
             player = yield from voice.create_ytdl_player(songlist[0])
             url = songlist[0]
             video = pafy.new(url)
             player.start()
             del songlist[0]
             pickle.dump(songlist,open("{0}/{0}_songlist.txt".format(str(message.server)),"wb"))
-            yield from client.send_message(message.channel, "Now playing: **{0}**\nIt is **{1}** long.".format(video.title,video.duration[3:len(video.duration)]))
-            yield from asyncio.sleep(video.length-5)
+            yield from client.send_message(message.channel, "Now playing: **{0}**\nIt is **[{1}]** long.".format(video.title,video.duration[3:len(video.duration)]))
+            yield from asyncio.sleep(video.length+1)
 
 
-    if message.content.startswith("!songlist" or "!queue"):
+    if message.content.startswith("!songlist") or message.content.startswith("!queue"):
         songlist = music.get_queue(message)
         yield from client.send_message(message.channel, songlist)
+
+    if message.content.startswith("!8ball") and len(split_message) > 2:
+        bot_message = general_commands.eight_ball()
+        yield from client.send_message(message.channel, bot_message)
 
 @client.async_event
 #Displays login name/id
