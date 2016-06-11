@@ -15,8 +15,8 @@ import urllib.error
 #Adding commands
 def add_command(message):
 
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
+    commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
+    commands_array = pickle.load(open("{}/commands_array.txt".format(str(message.server)),"rb"))
     """
     Hypothetically, I could have the bot add commands to itself. What a world.
     """
@@ -48,16 +48,16 @@ def add_command(message):
         commands[command] = command_text
         commands_array.append(command)
 
-        pickle.dump(commands, open("commands.txt", "wb"))
-        pickle.dump(commands_array, open("commands_array.txt", "wb"))
+        pickle.dump(commands, open("{}/commands.txt".format(str(message.server)), "wb"))
+        pickle.dump(commands_array, open("{}/commands_array.txt".format(str(message.server)), "wb"))
         return "Command added"
 
 
 #Deleting commands
 def delete_command(message, command):
 
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
+    commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
+    commands_array = pickle.load(open("{}/commands_array.txt".format(str(message.server)),"rb"))
     """
     There are times I may want to delete a command, when the user hasn't specified so.
     E.g. if a user creates an invalid command (such as using #random without a number), it will be deleted.
@@ -70,15 +70,15 @@ def delete_command(message, command):
     else:
         del commands[command]
         commands_array.remove(command)
-        pickle.dump(commands, open("commands.txt", "wb"))
-        pickle.dump(commands_array, open("commands_array.txt", "wb"))
+        pickle.dump(commands, open("{}/commands.txt".format(str(message.server)), "wb"))
+        pickle.dump(commands_array, open("{}/commands_array.txt".format(str(message.server)),"wb"))
 
 
 #Editing/replacing commands
 def edit_command(message):
 
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
+    commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
+    commands_array = pickle.load(open("{}/commands_array.txt".format(str(message.server)),"rb"))
     """
     Consistency with the command addition/deletion features.
     """
@@ -99,7 +99,7 @@ def edit_command(message):
             command_text = rep_command[2]
             commands[command] = command_text
 
-            pickle.dump(commands, open("commands.txt", "wb"))
-            pickle.dump(commands_array, open("commands_array.txt", "wb"))
+            pickle.dump(commands, open("{}/commands.txt".format(str(message.server)), "wb"))
+            pickle.dump(commands_array, open("{}/commands_array.txt".format(str(message.server)), "wb"))
 
             return "Command replaced"

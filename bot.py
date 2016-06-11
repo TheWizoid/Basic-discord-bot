@@ -55,10 +55,6 @@ def on_message(message):
     if adding_points != True:
         print("An error has occurred.")
 
-
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
-
     #General Commands
     result = general_commands.command_check(message)
     if result != None:

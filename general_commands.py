@@ -41,13 +41,23 @@ def command_check(message):
     between 1 and 900 etc. Also it should be noted that it is simply called #authorrandom isntead of #userrandom, due to
     annoying interactions with #user that I can't be bothered to fix.
     """
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
+    try:
+        commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
+    except:
+        commands = {"!memeschool":"https://www.youtube.com/watch?v=fJdA7dwx6-4"}
+        pickle.dump(commands,open("{}/commands.txt".format(str(message.server)),"wb"))
+    try:
+        commands_array = pickle.load(open("{}/commands_array.txt".format(str(message.server)),"rb"))
+    except:
+        commands_array = []
+        for i in commands:
+            commands_array.append(i)
+        pickle.dump(commands_array,open("{}/commands_array.txt".format(str(message.server)),"wb"))
     for i in commands_array:
         if str(message.content[0:len(i)+1]).casefold() == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
             if i not in commands:
                 commands_array.remove(i)
-                pickle.dump(commands_array,open("commands_array.txt","wb"))
+                pickle.dump(commands_array,open("{}/commands_array.txt".format(str(message.server)),"wb"))
             else:
                 command_info = commands[i]
                 list_message = message.content.split()
@@ -97,8 +107,8 @@ def command_check(message):
 
 def list_commands(message):
 
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
+    commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
+    commands_array = pickle.load(open("{}/commands_array.txt".format(str(message.server)),"rb"))
     list_of_commands = []
     str_of_commands = ""
     for i in commands_array:
@@ -125,8 +135,8 @@ def list_commands(message):
 
 
 def command_info(message):
-    commands = pickle.load(open("commands.txt","rb"))
-    commands_array = pickle.load(open("commands_array.txt","rb"))
+    commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
+    commands_array = pickle.load(open("{}/commands_array.txt".format(str(message.server)),"rb"))
     split_message = message.content.split()
     if len(split_message) < 2:
         return "Invalid amount of parameters"
