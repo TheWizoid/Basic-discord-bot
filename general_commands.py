@@ -53,7 +53,7 @@ def command_check(message):
             commands_array.append(i)
         pickle.dump(commands_array,open("{}/commands_array.txt".format(str(message.server)),"wb"))
     for i in commands_array:
-        if message.content.startswith(i):
+        if message.content.lower().startswith(i):
             if i not in commands:
                 commands_array.remove(i)
                 pickle.dump(commands_array,open("{}/commands_array.txt".format(str(message.server)),"wb"))
