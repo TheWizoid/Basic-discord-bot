@@ -27,19 +27,18 @@ def command_check(message):
     """
     Checks if a command is present at the beginning of a message.
     If it is in the array of commands, but not the dictionary (i.e there's no key which would cause an error)
-    it is deleted. Otherwise, it simply checks if #user, #touser, or #random are present in the command text.
+    it is deleted. Otherwise, it simply checks if #user, #touser, #random, or #authorrandom are present in the command text.
     If #touser is present, it will direct the message towards the user, by mentioning their username.
     If #user is present, the second word will replace it. If there is more than one word after the command,
     all are included. If #user has not been entered, the bot will send a private message to the author: "Invalid parameters".
-    If #random is present, a random number between 1 and the previously assigned value inclusive (e.g. !dice is #random6).
-    If #random is present, but the command was added without a number (e.g. if !dice was simply #random, instead of #random6),
+    If #random is present, a random number between 1 and the previously assigned value inclusive (e.g. !roll is #random6).
+    If #random is present, but the command was added without a number (e.g. if !roll was simply #random, instead of #random6),
     it will send a message to the user stating that the command is not valid, as it does not contain a number to randomise.
     The command will then be deleted.
-    Similar to how #random has a moderator defined maximum, #authorrandom has an author defined one, that is to say
-    that the author defines the maximum value. E.g. a moderator may type !addcom !random #authorrandom.
-    This would allow anyone to type !random 6 and receive a number between 1 and 6, !random 900 to receive a random number
-    between 1 and 900 etc. Also it should be noted that it is simply called #authorrandom isntead of #userrandom, due to
-    annoying interactions with #user that I can't be bothered to fix.
+    Similar to how #random has a moderator defined maximum, #authorrandom has an author defined one.
+    E.g. a moderator may type !addcom !random #authorrandom.
+    This would allow anyone to type !random 6 and receive a number between 1 and 6 (inclusive), !random 900 to receive a random number
+    between 1 and 900 etc.
     """
     try:
         commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
@@ -54,7 +53,7 @@ def command_check(message):
             commands_array.append(i)
         pickle.dump(commands_array,open("{}/commands_array.txt".format(str(message.server)),"wb"))
     for i in commands_array:
-        if str(message.content[0:len(i)+1]).casefold() == i.casefold() or message.content[0:len(i)+1] == (i+" ").casefold():
+        if message.content.startswith(i):
             if i not in commands:
                 commands_array.remove(i)
                 pickle.dump(commands_array,open("{}/commands_array.txt".format(str(message.server)),"wb"))
