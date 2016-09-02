@@ -2,6 +2,7 @@
 import asyncio
 import discord
 import json
+import oauth2
 import os
 import pafy
 import pickle
@@ -23,14 +24,7 @@ import mod_commands
 import chat_logging
 import music
 
-#this block is for privacy :>
-accinfo = open("name_and_pass.txt", "r") #opens txt of username;password
-info = accinfo.read().split(";") #splits up username and password
-accinfo.close()
-#this block is for privacy :>
-
 client = discord.Client()
-client.login(info[0],info[1])
 
 modlist = open("modlist.txt","r")
 mod = modlist.read()#List of mods on 1 line, edit at your pleasure
@@ -151,10 +145,34 @@ def on_message(message):
         bot_message += "Your avatar is {}\n```".format(message.author.avatar_url)
         yield from client.send_message(message.channel, bot_message)
 
+    if message.content.startswith("!serverinfo".casefold()):
+        bot_message = "Name: {}\n".format(message.server.name)
+        bot_message += "Server Owner: {}\n".format(message.server.owner.name)
+        bot_message += "ID: {}\n".format(message.server.id)
+        bot_message += "Region: {}\n".format(message.server.region)
+        bot_message += "Server Picture: {}\n".format(message.server.icon_url)
+        temp = ""
+        for i in message.server.roles:
+            temp += i.name.replace("@", "") + ", "
+        bot_message += "Available Roles: {}\n".format(temp)
+
+        bot_message += "AFK Timeout: {}\n".format(message.server.afk_timeout)
+
+        temp = ""
+        for i in message.server.channels:
+            temp += i.name + ", "
+        bot_message += "Channels: {}\n".format(temp)
+        temp = ""
+        for i in message.server.members:
+            temp += i.name+ "\n"
+        bot_message += "Members: {}\n".format(temp)
+
+        yield from client.send_message(message.author, bot_message)
+
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:
-                yield from client.send_message(message.channel, ":boom: :man_with_turban: :boom: ")
+                yield from client.send_message(message.channel, ":boom: :man_with_turban::skin-tone-5: :boom: ")
                 break
             yield from asyncio.sleep(1)
             yield from client.send_message(message.channel, "{}".format(i))
@@ -179,7 +197,7 @@ def on_message(message):
         else:
             for i in range(2,len(split_message)):
                 split_message[1] += " " + split_message[i]
-            amount = points_stuff.user_points(message, split_message[1].casefold())
+            amount = points_stuff.user_points(message, split_message[1])
             yield from client.send_message(message.channel, amount)
 
     #!points
@@ -233,19 +251,10 @@ def on_message(message):
         yield from client.send_message(message.channel, song_added)
 
     if message.content.startswith("!songson") or (message.content.startswith("!skipsong") and message.content.user.lower() in mod):
-        channel_list = []
-        for server in client.servers:
-            for channel in server.channels:
-                channel_list.append(channel)
-        for i in channel_list:
-            #print(i.voice_members)
-            if message.author in i.voice_members:
-                voice_channel = i
-                break
         try:
-            voice = yield from client.join_voice_channel(voice_channel)
+            voice = yield from client.join_voice_channel(message.author.voice_channel)
         except discord.errors.ClientException:
-            pass
+            pass#voice = yield from client.move_to(message.author.voice_channel)
         #print(songlist)
         songlist = pickle.load(open("{0}/{0}_songlist.txt".format(str(message.server)),"rb"))
         while len(songlist) > 0:
@@ -265,7 +274,7 @@ def on_message(message):
         yield from client.send_message(message.channel, songlist)
 
     if message.content.startswith("!8ball") and len(split_message) > 2:
-        bot_message = general_commands.eight_ball()
+        bot_message = general_commands.eight_ball(message)
         yield from client.send_message(message.channel, bot_message)
 
 @client.async_event
@@ -275,4 +284,4 @@ def on_ready():
     print(client.user.name)
     print(client.user.id)
 
-client.run(info[0],info[1])#0 is username, 1 is password.
+client.run("token")
