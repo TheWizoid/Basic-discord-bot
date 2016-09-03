@@ -81,27 +81,24 @@ def on_message(message):
         else:
             yield from client.send_message(message.author, "You do not have permission to perform that command.")
 
-    #Doesn't work
+    #Banning
     if message.content.startswith("!ban".casefold()):
-        list_of_users = []
         if message_author in mod:
             if len(split_message) < 2:
                 yield from client.send_message(message.author, "Invalid user")
             else:
-                for i in range(2,len(split_message)):
-                    split_message[1] += " " + split_message[i]
                 try:
-                    """for member in message.server.members:
-                        list_of_users.append(member.name.lower())
-                    if split_message[1] in list_of_users:
-                        user = member[]
-                        yield from client.ban()
-                    """
-                    user = split_message[1]
-                    user = user[1:len(user)-4]
-                    yield from client.ban(user)
+                    for member in message.server.members:
+                        split_message[1] = split_message[1].replace("<", "")
+                        split_message[1] = split_message[1].replace(">", "")
+                        split_message[1] = split_message[1].replace("@", "")#strips the string down to the id of the member
+                        if split_message[1] in member.id:#is this the member that you want to ban?
+                            yield from client.ban(member)
+                            yield from client.send_message(message.channel, "{} Has been banned from the server".format(split_message[1]))
+                            break
                 except:
-                    yield from client.send_message(message.author,"User does not exist.")
+                    yield from client.send_message(message.author, "That user does not exist")
+
 
     #Command info
     if message.content.startswith("!commandinfo".casefold()):
