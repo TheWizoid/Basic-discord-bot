@@ -43,6 +43,7 @@ def command_check(message):
     try:
         commands = pickle.load(open("{}/commands.txt".format(str(message.server)),"rb"))
     except:
+        #just a placeholder/default command to create the dictionary successfully
         commands = {"!memeschool":"https://www.youtube.com/watch?v=fJdA7dwx6-4"}
         pickle.dump(commands,open("{}/commands.txt".format(str(message.server)),"wb"))
     try:
@@ -60,39 +61,42 @@ def command_check(message):
             else:
                 command_info = commands[i]
                 list_message = message.content.split()
-                if "#user" in command_info:
+                if "<" not in command_info:
+                    return commands[i]
+                
+                if "<user>" in command_info:
                     try:
                         for i in range(1,len(list_message)):
                             if i > 1:
                                 list_message[1] += " " + list_message[i]
-                        command_info = command_info.replace("#user", list_message[1])
+                        command_info = command_info.replace("<user>", list_message[1])
                     except IndexError:
-                        command_info = command_info.replace("#user", message.author.name)
+                        command_info = command_info.replace("<user>", message.author.name)
                     return command_info
 
-                if "#touser" in command_info:
+                if "<touser>" in command_info:
                     try:
-                        command_info = command_info.replace("#touser", str(message.author.name))
+                        command_info = command_info.replace("<touser>", str(message.author.name))
                         return  command_info
                     except IndexError:
                         return send_message(message.author, "Invalid parameters")
 
 
-                if "#random" in command_info:
+                if "<random>" in command_info:
                     try:
-                        random_number = command_info[command_info.find("#random")+7]
-                        command_info = command_info.replace("#random", str(randint(1,int(random_number))))
+                        random_number = command_info[command_info.find("<random>")+7]
+                        command_info = command_info.replace("<random>", str(randint(1,int(random_number))))
                         command_info = command_info.replace(random_number, "")
                         return  command_info
                         break
                     except IndexError:
                         delete_command(message, i)
-                        return "The way this command was created is not valid, it is being deleted.\nThe command has been deleted."
+                        return "The way this command was created is not valid, it has been deleted."
 
-                if "#authorrandom" in command_info:
+                if "<authorrandom>" in command_info:
                     try:
                         max_num = int(list_message[1])
-                        command_info = command_info.replace("#authorrandom", str(randint(1, max_num)))
+                        command_info = command_info.replace("<authorrandom>", str(randint(1, max_num)))
                         return command_info
                     except ValueError:
                         return "That must be a number"
@@ -100,8 +104,7 @@ def command_check(message):
                         return "Invalid parameters"
 
 
-                if "#" not in command_info:
-                    return commands[i]
+                
 
 
 def list_commands(message):
@@ -122,9 +125,9 @@ def list_commands(message):
         if "*" in i:
             edited = i.replace("*","\*")
             str_of_commands += edited + ", "
-        elif "#user" in commands[i]:
+        elif "<user>" in commands[i]:
             str_of_commands += i + " <user>, "
-        elif "#touser" in commands[i]:
+        elif "<touser>" in commands[i]:
             str_of_commands += i +" <author>, "
         else:
             str_of_commands += i + ", "
