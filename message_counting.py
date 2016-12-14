@@ -9,14 +9,14 @@ if __name__ == "__main__":
     while server != "q":
         server = input("What is the name of the server you will be counting? ").lower()
         try:
-            chatlog = open("{}_chatlog.txt".format(server),"r")
+            chatlog = open("{}/chatlog.txt".format(server),"r")
         except FileNotFoundError:
             if server != "q":
                 print("That server doesn't exist.")
             chatlog = ""
 
         try:
-            message_amount = pickle.load(open("{}_messages.txt".format(server),"rb"))
+            message_amount = pickle.load(open("{}/messages.txt".format(server),"rb"))
         except FileNotFoundError:
             message_amount = {"barry chuckle bot":0}
 
@@ -43,4 +43,4 @@ if __name__ == "__main__":
 
         if chatlog != "":
             print(message_amount)
-            pickle.dump(message_amount, open("{}_messages.txt".format(server),"wb"))
+            pickle.dump(message_amount, open("{}/messages.txt".format(server),"wb"))
