@@ -169,7 +169,7 @@ def on_message(message):
     if message.content.startswith("!selfdestruct".casefold()):
         for i in range(10,-1,-1):
             if i == 0:
-                yield from client.send_message(message.channel, ":boom: :man_with_turban::skin-tone-5: :boom: ")
+                yield from client.send_message(message.channel, ":boom:")
                 break
             yield from asyncio.sleep(1)
             yield from client.send_message(message.channel, "{}".format(i))
