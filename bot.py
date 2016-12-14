@@ -177,7 +177,7 @@ def on_message(message):
     #kill (only available to mods)
     if message.content.startswith("!kill".casefold()):
         if message_author in mod:
-            yield from client.send_message(message.channel, "Barry Bot going down BibleThump /")
+            yield from client.send_message(message.channel, "Barry Bot going down")
             os._exit(5)
         else:
             yield from client.send_message(message.author, "You do not have permission to perform that command.")
